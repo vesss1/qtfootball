@@ -36,6 +36,9 @@ def main():
     # Step 3: Tracker for object IDs
     tracker = Tracker(OBJ_MODEL_PATH)
     tracks = tracker.get_object_tracks(video_frames, read_from_stub=False)
+    
+    # Step 3.1: Interpolate ball positions (to handle missing detections)
+    tracks['ball'] = tracker.interpolate_ball_positions(tracks['ball'])
 
     # Step 3.5: Add positions to tracks (required for camera adjustment)
     tracker.add_position_to_tracks(tracks)
@@ -66,7 +69,7 @@ def main():
     player_assigner = PlayerBallAssigner()
     team_ball_control = []
     for frame_num, player_tracks in enumerate(tracks['players']):
-        ball_bbox = tracks['ball'][frame_num][1]['bbox']
+        ball_bbox = tracks['ball'][frame_num].get(1, {}).get('bbox', [])
         assigned_player = player_assigner.assign_ball_to_player(player_tracks, ball_bbox)
         if assigned_player != -1:
             tracks['players'][frame_num][assigned_player]['has_ball'] = True
