@@ -6,7 +6,21 @@ import os
 
 class CameraMovementEstimator():
 
-    def __init__(self, frame) :
+    def __init__(self, frame):
+        """
+        Initialize camera movement estimator with first frame.
+        
+        Args:
+            frame: First video frame.
+            
+        Raises:
+            ValueError: If frame is invalid.
+        """
+        if frame is None or not hasattr(frame, 'shape'):
+            raise ValueError("frame must be a valid numpy array")
+        
+        if frame.size == 0:
+            raise ValueError("frame is empty")
 
         self.minimum_distance = 5
 
@@ -43,11 +57,30 @@ class CameraMovementEstimator():
 
 
     def get_camera_movement(self, frames, read_from_stub=False, stub_path=None):
+        """
+        Calculates camera movement across video frames.
+        
+        Args:
+            frames (list): List of video frames.
+            read_from_stub (bool): Whether to read from cached file.
+            stub_path (str): Path to stub file.
+            
+        Returns:
+            list: Camera movement per frame.
+            
+        Raises:
+            ValueError: If frames is invalid.
+        """
         # Read from stub 
         if read_from_stub and stub_path is not None and os.path.exists(stub_path):
             with open(stub_path, 'rb')as f:
                 return pickle.load(f)
 
+        if not frames or not isinstance(frames, list):
+            raise ValueError("frames must be a non-empty list")
+        
+        if len(frames) == 0:
+            raise ValueError("frames list is empty")
 
         camera_movement = [[0,0]]*len(frames)
 

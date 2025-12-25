@@ -24,3 +24,10 @@
 /stub/three.pkl
 /stub/four.pkl
 /stub/five.pkl
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python

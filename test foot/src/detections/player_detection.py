@@ -16,7 +16,19 @@ def get_detection(model_path, video_frames, stubs_path=None, stubs_status=False)
     
     Returns:
     - detected_frames (list): List of tracked detections for each frame.
+    
+    Raises:
+    - ValueError: If inputs are invalid.
     """
+    if not isinstance(model_path, str) or not model_path:
+        raise ValueError("model_path must be a non-empty string")
+    
+    if not video_frames or not isinstance(video_frames, list):
+        raise ValueError("video_frames must be a non-empty list")
+    
+    if len(video_frames) == 0:
+        raise ValueError("video_frames list is empty")
+    
     # Check if we should load detections from a cached file
     if stubs_status and stubs_path is not None and os.path.exists(stubs_path):
         with open(stubs_path, "rb") as f:
@@ -55,7 +67,22 @@ def draw_annotation(video_frames, detection, team_assignments, assigned_players)
     
     Returns:
     - annotated_frames (list): List of annotated video frames.
+    
+    Raises:
+    - ValueError: If inputs are invalid.
     """
+    if not video_frames or not isinstance(video_frames, list):
+        raise ValueError("video_frames must be a non-empty list")
+    
+    if len(video_frames) == 0:
+        raise ValueError("video_frames list is empty")
+    
+    if not detection or not isinstance(detection, list):
+        raise ValueError("detection must be a non-empty list")
+    
+    if not isinstance(assigned_players, list):
+        raise ValueError("assigned_players must be a list")
+    
     annotated_frames = []
     
     # Define annotators for different object types (players, referees, ball)

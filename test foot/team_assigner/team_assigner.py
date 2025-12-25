@@ -18,7 +18,38 @@ class TeamAssigner:
 
     
     def get_player_color(self, frame, bbox):
-        image = frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+        """
+        Extracts the dominant player color from a bounding box region.
+        
+        Args:
+            frame: Video frame (numpy array).
+            bbox: Bounding box coordinates.
+            
+        Returns:
+            numpy.ndarray: Player color (RGB values).
+            
+        Raises:
+            ValueError: If frame or bbox is invalid.
+        """
+        if frame is None or frame.size == 0:
+            raise ValueError("frame is empty or None")
+        
+        if not bbox or len(bbox) != 4:
+            raise ValueError("bbox must contain exactly 4 coordinates")
+        
+        x1, y1, x2, y2 = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
+        
+        # Validate bbox is within frame bounds
+        if x1 < 0 or y1 < 0 or x2 > frame.shape[1] or y2 > frame.shape[0]:
+            raise ValueError(f"bbox {bbox} is outside frame dimensions {frame.shape}")
+        
+        if x2 <= x1 or y2 <= y1:
+            raise ValueError(f"Invalid bbox dimensions: {bbox}")
+        
+        image = frame[y1:y2, x1:x2]
+        
+        if image.size == 0:
+            raise ValueError("Extracted image region is empty")
 
         top_half_image = image[0: int(image.shape[0]/2), :]
 
@@ -42,13 +73,40 @@ class TeamAssigner:
 
 
     def assign_team_color(self, frame, player_detections):
+        """
+        Assigns team colors based on player detections.
+        
+        Args:
+            frame: Video frame.
+            player_detections (dict): Dictionary of player detections.
+            
+        Raises:
+            ValueError: If inputs are invalid.
+        """
+        if frame is None or frame.size == 0:
+            raise ValueError("frame is empty or None")
+        
+        if not isinstance(player_detections, dict):
+            raise ValueError("player_detections must be a dictionary")
+        
+        if len(player_detections) < 2:
+            raise ValueError("Need at least 2 players to assign team colors")
 
         player_colors = []
         for track_id, player_detection in player_detections.items():
-            bbox = player_detection['bbox'] 
-            player_color = self.get_player_color(frame, bbox)
-
-            player_colors.append(player_color)
+            if 'bbox' not in player_detection:
+                continue
+                
+            bbox = player_detection['bbox']
+            
+            try:
+                player_color = self.get_player_color(frame, bbox)
+                player_colors.append(player_color)
+            except ValueError:
+                continue
+        
+        if len(player_colors) < 2:
+            raise ValueError("Could not extract enough valid player colors for team assignment")
 
         kmeans = KMeans(n_clusters=2, init="k-means++", n_init=1)
         kmeans.fit(player_colors)

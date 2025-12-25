@@ -11,6 +11,21 @@ from utils import get_bbox_width, get_center_of_bbox,get_foot_position
 class Tracker:
     
     def __init__(self, model_path):
+        """
+        Initialize the Tracker with a YOLO model.
+        
+        Args:
+            model_path (str): Path to the YOLO model file.
+            
+        Raises:
+            ValueError: If model_path is invalid.
+        """
+        if not model_path or not isinstance(model_path, str):
+            raise ValueError("model_path must be a non-empty string")
+        
+        if not os.path.exists(model_path):
+            raise ValueError(f"Model file does not exist: {model_path}")
+        
         self.model = YOLO(model_path)
         self.tracker = sv.ByteTrack()
 
@@ -40,6 +55,22 @@ class Tracker:
 
 
     def get_object_tracks(self, frames, read_from_stub=False, stub_path=None):
+        """
+        Get object tracks from video frames.
+        
+        Args:
+            frames (list): List of video frames.
+            read_from_stub (bool): Whether to read from cached file.
+            stub_path (str): Path to stub file.
+            
+        Returns:
+            dict: Dictionary containing tracked objects.
+            
+        Raises:
+            ValueError: If frames is invalid.
+        """
+        if not frames or not isinstance(frames, list):
+            raise ValueError("frames must be a non-empty list")
 
         if read_from_stub and stub_path is not None and os.path.exists(stub_path):
             with open(stub_path, "rb") as f:
@@ -224,7 +255,19 @@ class Tracker:
         return output_video_frames
 
 
-    def add_position_to_tracks(sekf,tracks):
+    def add_position_to_tracks(self,tracks):
+        """
+        Adds position information to tracked objects.
+        
+        Args:
+            tracks (dict): Dictionary containing tracked objects.
+            
+        Raises:
+            ValueError: If tracks is invalid.
+        """
+        if not tracks or not isinstance(tracks, dict):
+            raise ValueError("tracks must be a non-empty dictionary")
+        
         for object, object_tracks in tracks.items():
             for frame_num, track in enumerate(object_tracks):
                 for track_id, track_info in track.items():

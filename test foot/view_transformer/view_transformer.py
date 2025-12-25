@@ -27,6 +27,32 @@ class ViewTransformer():
 
     
     def transform_point(self, point):
+        """
+        Transforms a point using perspective transformation.
+        
+        Args:
+            point: Point coordinates (numpy array or tuple).
+            
+        Returns:
+            Transformed point coordinates or None if point is outside bounds.
+            
+        Raises:
+            ValueError: If point format is invalid.
+        """
+        if point is None:
+            return None
+        
+        # Check if point is a numpy array or convert from tuple/list
+        if isinstance(point, np.ndarray):
+            if point.size < 2:
+                raise ValueError("point must have at least 2 coordinates")
+        elif isinstance(point, (tuple, list)):
+            if len(point) < 2:
+                raise ValueError("point must have at least 2 coordinates")
+            point = np.array(point)
+        else:
+            raise ValueError("point must be a numpy array, tuple, or list")
+        
         p = (int(point[0]), int(point[1]))
         is_inside = cv2.pointPolygonTest(self.pixel_verticies, p, False) >= 0
         if not is_inside:
@@ -39,10 +65,30 @@ class ViewTransformer():
 
     
     def add_transformed_position_to_tracks(self, tracks):
+        """
+        Adds transformed positions to all tracks.
+        
+        Args:
+            tracks (dict): Dictionary containing tracked objects.
+            
+        Raises:
+            ValueError: If tracks is invalid.
+        """
+        if not tracks or not isinstance(tracks, dict):
+            raise ValueError("tracks must be a non-empty dictionary")
+        
         for object, object_tracks in tracks.items():
             for frame_num, track in enumerate(object_tracks):
                 for track_id, track_info in track.items():
+                    if 'position_adjusted' not in track_info:
+                        continue
+                        
                     position = track_info['position_adjusted']
+                    
+                    if position is None:
+                        tracks[object][frame_num][track_id]["position_transformed"] = None
+                        continue
+                    
                     position = np.array(position)
                     position_transformed = self.transform_point(position)
 
