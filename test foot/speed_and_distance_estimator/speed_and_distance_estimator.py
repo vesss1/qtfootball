@@ -6,13 +6,28 @@ class SpeedAndDistanceEstimator():
         self.frame_window = 5
         self.frame_rate = 24
 
-    def add_speed_and_sistance_to_tracks(self, tracks):
+    def add_speed_and_distance_to_tracks(self, tracks):
+        """
+        Adds speed and distance information to tracks.
+        
+        Args:
+            tracks (dict): Dictionary containing tracked objects.
+            
+        Raises:
+            ValueError: If tracks is invalid.
+        """
+        if not tracks or not isinstance(tracks, dict):
+            raise ValueError("tracks must be a non-empty dictionary")
         
         total_distance = {}
 
         for object, object_tracks in tracks.items():
-            if object == "ball" or object == "raferees":
+            if object == "ball" or object == "referees":
                 continue
+            
+            if not isinstance(object_tracks, list):
+                continue
+                
             number_of_frames = len(object_tracks)
             for frame_num in range(0, number_of_frames, self.frame_window):
                 last_frame = min(frame_num + self.frame_window, number_of_frames-1)
@@ -29,6 +44,9 @@ class SpeedAndDistanceEstimator():
 
                     distance_covered = measure_distance(start_position, end_position)
                     time_elapsed = (last_frame-frame_num)/self.frame_rate
+
+                    if time_elapsed == 0:
+                        continue
 
                     speed_meteres_per_second = distance_covered/time_elapsed
                     speed_km_per_hour = speed_meteres_per_second*3.6
@@ -49,6 +67,25 @@ class SpeedAndDistanceEstimator():
 
     
     def draw_speed_and_distance(self, frames, tracks):
+        """
+        Draws speed and distance information on video frames.
+        
+        Args:
+            frames (list): List of video frames.
+            tracks (dict): Dictionary containing tracked objects.
+            
+        Returns:
+            list: List of annotated frames.
+            
+        Raises:
+            ValueError: If frames or tracks are invalid.
+        """
+        if not frames or not isinstance(frames, list):
+            raise ValueError("frames must be a non-empty list")
+        
+        if not tracks or not isinstance(tracks, dict):
+            raise ValueError("tracks must be a non-empty dictionary")
+        
         output_frames = []
 
         for frame_num, frame in enumerate(frames):

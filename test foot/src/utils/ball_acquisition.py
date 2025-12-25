@@ -11,7 +11,18 @@ def assign_ball_to_player(players, ball_bbox):
 
     Returns:
         int: The ID of the assigned player. If no player is close enough, returns -1.
+        
+    Raises:
+        ValueError: If inputs are invalid.
     """
+    if not isinstance(players, dict):
+        raise ValueError("players must be a dictionary")
+    
+    if not ball_bbox or len(ball_bbox) < 4:
+        return -1
+    
+    if len(players) == 0:
+        return -1
     
     # Get the center position of the ball using its bounding box
     ball_position = get_center_of_bbox(ball_bbox)
@@ -25,7 +36,13 @@ def assign_ball_to_player(players, ball_bbox):
 
     # Loop through each player to check the distance to the ball
     for player_id, player in players.items():
+        if 'bbox' not in player:
+            continue
+            
         player_bbox = player["bbox"]
+        
+        if not player_bbox or len(player_bbox) < 4:
+            continue
         
         # Get the center position of the player's bounding box
         player_position = get_center_of_bbox(player_bbox)
