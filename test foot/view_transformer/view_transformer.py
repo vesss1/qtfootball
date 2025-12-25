@@ -42,16 +42,16 @@ class ViewTransformer():
         if point is None:
             return None
         
-        if not hasattr(point, 'shape') and not isinstance(point, (tuple, list)):
-            raise ValueError("point must be a numpy array, tuple, or list")
-        
-        if isinstance(point, (tuple, list)):
+        # Check if point is a numpy array or convert from tuple/list
+        if isinstance(point, np.ndarray):
+            if point.size < 2:
+                raise ValueError("point must have at least 2 coordinates")
+        elif isinstance(point, (tuple, list)):
             if len(point) < 2:
                 raise ValueError("point must have at least 2 coordinates")
             point = np.array(point)
-        
-        if point.size < 2:
-            raise ValueError("point must have at least 2 coordinates")
+        else:
+            raise ValueError("point must be a numpy array, tuple, or list")
         
         p = (int(point[0]), int(point[1]))
         is_inside = cv2.pointPolygonTest(self.pixel_verticies, p, False) >= 0

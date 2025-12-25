@@ -53,9 +53,6 @@ def save_video(output_video_frames, output_video_path):
     if not output_video_frames or not isinstance(output_video_frames, list):
         raise ValueError("output_video_frames must be a non-empty list")
     
-    if len(output_video_frames) == 0:
-        raise ValueError("output_video_frames list is empty")
-    
     if not isinstance(output_video_path, str) or not output_video_path:
         raise ValueError("output_video_path must be a non-empty string")
     
