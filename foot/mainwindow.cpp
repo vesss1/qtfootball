@@ -49,9 +49,9 @@ void MainWindow::onAddPlayerClicked()
     
     // Clear input fields
     ui->lineEditName->clear();
-    ui->spinBoxAge->setValue(20);
     ui->comboBoxPosition->setCurrentIndex(0);
+    ui->spinBoxAge->setValue(20);
     
     // Show success message
-    QMessageBox::information(this, "成功", QString("球員 %1 已新增！").arg(name));
+    QMessageBox::information(this, "成功", QString("球員 %1 已新增！").arg(player.name));
 }
