@@ -61,7 +61,7 @@ def measure_distance(p1, p2):
     Raises:
         ValueError: If points format is invalid.
     """
-    if not p1 or not p2 or len(p1) < 2 or len(p2) < 2:
+    if p1 is None or p2 is None or len(p1) < 2 or len(p2) < 2:
         raise ValueError("Both points must have at least 2 coordinates (x, y)")
     
     return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
@@ -81,7 +81,7 @@ def measure_xy_distance(p1, p2):
     Raises:
         ValueError: If points format is invalid.
     """
-    if not p1 or not p2 or len(p1) < 2 or len(p2) < 2:
+    if p1 is None or p2 is None or len(p1) < 2 or len(p2) < 2:
         raise ValueError("Both points must have at least 2 coordinates (x, y)")
     
     return (p1[0] - p2[0]), (p1[1] - p2[1])
