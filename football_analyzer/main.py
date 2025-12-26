@@ -76,7 +76,7 @@ def main():
     # Step 7: Calculate speed and distance
     print("\n[7/9] Calculating speed and distance...")
     speed_and_distance_estimator = SpeedAndDistanceEstimator()
-    speed_and_distance_estimator.add_speed_and_sistance_to_tracks(tracks)
+    speed_and_distance_estimator.add_speed_and_distance_to_tracks(tracks)
     print("✓ Speed and distance calculated")
     
     # Step 8: Assign teams

@@ -6,12 +6,12 @@ class SpeedAndDistanceEstimator():
         self.frame_window = 5
         self.frame_rate = 24
 
-    def add_speed_and_sistance_to_tracks(self, tracks):
+    def add_speed_and_distance_to_tracks(self, tracks):
         
         total_distance = {}
 
         for object, object_tracks in tracks.items():
-            if object == "ball" or object == "raferees":
+            if object == "ball" or object == "referees":
                 continue
             number_of_frames = len(object_tracks)
             for frame_num in range(0, number_of_frames, self.frame_window):
@@ -30,8 +30,8 @@ class SpeedAndDistanceEstimator():
                     distance_covered = measure_distance(start_position, end_position)
                     time_elapsed = (last_frame-frame_num)/self.frame_rate
 
-                    speed_meteres_per_second = distance_covered/time_elapsed
-                    speed_km_per_hour = speed_meteres_per_second*3.6
+                    speed_meters_per_second = distance_covered/time_elapsed
+                    speed_km_per_hour = speed_meters_per_second*3.6
 
                     if object not in total_distance:
                         total_distance[object] = {}

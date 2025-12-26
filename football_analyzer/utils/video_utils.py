@@ -33,7 +33,7 @@ def save_video(frames, output_video_path, fps=24.0):
     Parameters:
         frames (list): List of frames to write to the video.
         output_video_path (str): Path to save the output video.
-        fps (float, optional): Frames per per for the output video. Default is 24.0.
+        fps (float, optional): Frames per second for the output video. Default is 24.0.
     """
     if len(frames) == 0:
         raise ValueError("No frames to save")
