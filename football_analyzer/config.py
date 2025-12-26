@@ -68,8 +68,15 @@ FIELD_LENGTH = 23.32  # meters
 # Note: The FIELD_LENGTH value (23.32m) appears to be from the original code
 # and may represent a portion of the field visible in the camera view, not the
 # full field length. Standard football pitch length is 100-110 meters.
-# Adjust these values based on your specific video's field of view and
-# the corner points you're using for perspective transformation.
+#
+# To determine correct values for your video:
+# 1. Identify the corner points visible in your video frame
+# 2. Measure the real-world distance between those points
+# 3. Update FIELD_LENGTH and FIELD_WIDTH accordingly
+# 4. Update pixel_vertices in view_transformer.py to match your corner points
+#
+# The perspective transformation accuracy depends on correctly matching
+# pixel coordinates to real-world field dimensions.
 
 
 # ===== VIDEO OUTPUT SETTINGS =====
