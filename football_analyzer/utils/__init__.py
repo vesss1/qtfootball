@@ -1,4 +1,9 @@
-from .video_utils import read_video, save_video
+from .video_utils import (
+    read_video,
+    save_video,
+    get_video_properties,
+    read_video_frames_generator
+)
 from .bbox_utils import (
     get_center_of_bbox,
     get_bbox_width,
@@ -10,6 +15,8 @@ from .bbox_utils import (
 __all__ = [
     'read_video',
     'save_video',
+    'get_video_properties',
+    'read_video_frames_generator',
     'get_center_of_bbox',
     'get_bbox_width',
     'measure_distance',

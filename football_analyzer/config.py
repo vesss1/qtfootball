@@ -15,7 +15,19 @@ MODEL_PATH = "models/best.pt"
 
 # Maximum number of frames to process (None for all frames)
 # Use this to limit memory usage when processing large videos
-# For example, set to 300 to process only the first 300 frames (~12 seconds at 24 fps)
+# 
+# Memory usage examples (BGR frames in RAM):
+# - 1920x1080 @ 60fps for 10s (~600 frames) = ~3.7 GB
+# - 1920x1080 @ 60fps for 30s (~1800 frames) = ~11 GB
+# - 3840x2160 @ 60fps for 10s (~600 frames) = ~14.7 GB
+#
+# For 60fps long videos, consider setting this to 300-600 frames
+# to avoid "Insufficient memory" errors from OpenCV.
+# 
+# Examples:
+#   MAX_FRAMES = None   # Process entire video (may use 100+ GB for long videos)
+#   MAX_FRAMES = 600    # Process first 600 frames (~10 seconds at 60fps, ~3.7GB for 1080p)
+#   MAX_FRAMES = 300    # Process first 300 frames (~5 seconds at 60fps, ~1.8GB for 1080p)
 MAX_FRAMES = None
 
 

@@ -119,6 +119,102 @@ def read_video(video_path, max_frames=None):
     return frames
 
 
+def get_video_properties(video_path):
+    """
+    Get video properties without loading frames.
+    
+    Parameters:
+        video_path (str): The path to the video file.
+    
+    Returns:
+        dict: Dictionary containing video properties:
+            - width (int): Frame width in pixels
+            - height (int): Frame height in pixels
+            - fps (float): Frames per second
+            - total_frames (int): Total number of frames (may be 0 if unknown)
+            - duration (float): Video duration in seconds (may be 0 if unknown)
+    
+    Raises:
+        ValueError: If the video file cannot be opened.
+    """
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise ValueError(f"Error: Could not open video {video_path}")
+    
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    
+    cap.release()
+    
+    # Validate dimensions
+    if width <= 0 or height <= 0:
+        raise ValueError(f"Invalid video dimensions: {width}x{height}. The video may be corrupted.")
+    
+    # Calculate duration
+    duration = 0
+    if total_frames > 0 and fps > 0:
+        duration = total_frames / fps
+    
+    return {
+        'width': width,
+        'height': height,
+        'fps': fps,
+        'total_frames': max(0, total_frames),  # Avoid negative values
+        'duration': duration
+    }
+
+
+def read_video_frames_generator(video_path, max_frames=None):
+    """
+    Generator that yields video frames one at a time for memory-efficient processing.
+    
+    This function is ideal for very long videos or memory-constrained environments
+    as it only keeps one frame in memory at a time.
+    
+    Parameters:
+        video_path (str): The path to the video file.
+        max_frames (int, optional): Maximum number of frames to yield.
+                                   If None, yields all frames.
+    
+    Yields:
+        tuple: (frame_index, frame) where frame_index is 0-based frame number
+    
+    Raises:
+        ValueError: If the video file cannot be opened or max_frames is negative.
+    
+    Example:
+        >>> for frame_idx, frame in read_video_frames_generator('video.mp4', max_frames=100):
+        ...     # Process frame here
+        ...     processed = process_frame(frame)
+        ...     # Frame is automatically discarded after this iteration
+    """
+    if max_frames is not None and max_frames < 0:
+        raise ValueError(f"max_frames must be non-negative, got {max_frames}")
+    
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise ValueError(f"Error: Could not open video {video_path}")
+    
+    frame_count = 0
+    
+    try:
+        while True:
+            if max_frames is not None and frame_count >= max_frames:
+                break
+            
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            yield frame_count, frame
+            frame_count += 1
+    
+    finally:
+        cap.release()
+
+
 def save_video(frames, output_video_path, fps=24.0):
     """
     Saves a list of frames to a video file.
