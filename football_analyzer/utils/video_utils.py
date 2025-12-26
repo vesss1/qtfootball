@@ -13,14 +13,14 @@ def read_video(video_path, max_frames=None):
     Parameters:
         video_path (str): The path to the video file.
         max_frames (int, optional): Maximum number of frames to read. 
-                                   If None, reads all frames. Useful for 
-                                   memory-constrained environments or testing.
+                                   If None, reads all frames. Set to 0 to read no frames.
+                                   Useful for memory-constrained environments or testing.
 
     Returns:
         list: A list of frames in the video.
     
     Raises:
-        ValueError: If the video file cannot be opened.
+        ValueError: If the video file cannot be opened or contains no frames.
         MemoryError: If there's not enough memory to load the video frames.
     """
     cap = cv2.VideoCapture(video_path)
@@ -40,6 +40,12 @@ def read_video(video_path, max_frames=None):
     print(f"Video info: {width}x{height}, {total_frames} frames, {fps:.2f} fps")
     print(f"Estimated memory required: {estimated_memory_mb:.2f} MB for {frames_to_read} frames")
     
+    # Skip reading if max_frames is 0
+    if max_frames is not None and max_frames == 0:
+        print(f"max_frames is set to 0, no frames will be loaded")
+        cap.release()
+        return []
+    
     if estimated_memory_mb > MEMORY_WARNING_THRESHOLD_MB:
         print(f"WARNING: Video requires approximately {estimated_memory_mb/1024:.2f} GB of memory")
         print("Consider using max_frames parameter to limit memory usage")
@@ -54,10 +60,6 @@ def read_video(video_path, max_frames=None):
                 break
             
             frame_count += 1
-            
-            if frame is None:
-                print(f"Warning: Skipping empty frame at position {frame_count}")
-                continue
             
             # Stop if we've reached the maximum number of frames (before appending)
             if max_frames is not None and len(frames) >= max_frames:
@@ -79,8 +81,8 @@ def read_video(video_path, max_frames=None):
     
     cap.release()
     
-    if len(frames) == 0:
-        raise ValueError(f"No frames were read from video {video_path}")
+    if len(frames) == 0 and (max_frames is None or max_frames > 0):
+        raise ValueError(f"No frames were read from video {video_path}. The video may be empty or corrupted.")
     
     print(f"Successfully loaded {len(frames)} frames")
     return frames
