@@ -2,6 +2,10 @@ import cv2
 from tqdm import tqdm
 
 
+# Memory warning threshold in MB (warn if video requires more than this)
+MEMORY_WARNING_THRESHOLD_MB = 8000
+
+
 def read_video(video_path, max_frames=None):
     """
     Reads a video and returns a list of frames.
@@ -30,13 +34,13 @@ def read_video(video_path, max_frames=None):
     fps = cap.get(cv2.CAP_PROP_FPS)
     
     # Estimate memory requirement (3 bytes per pixel for BGR)
-    frames_to_read = min(total_frames, max_frames) if max_frames else total_frames
+    frames_to_read = min(total_frames, max_frames) if max_frames is not None else total_frames
     estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024)
     
     print(f"Video info: {width}x{height}, {total_frames} frames, {fps:.2f} fps")
     print(f"Estimated memory required: {estimated_memory_mb:.2f} MB for {frames_to_read} frames")
     
-    if estimated_memory_mb > 8000:  # Warning for videos requiring more than 8GB
+    if estimated_memory_mb > MEMORY_WARNING_THRESHOLD_MB:
         print(f"WARNING: Video requires approximately {estimated_memory_mb/1024:.2f} GB of memory")
         print("Consider using max_frames parameter to limit memory usage")
     
@@ -49,17 +53,18 @@ def read_video(video_path, max_frames=None):
             if not ret:
                 break
             
+            frame_count += 1
+            
             if frame is None:
                 print(f"Warning: Skipping empty frame at position {frame_count}")
                 continue
-                
-            frames.append(frame)
-            frame_count += 1
             
-            # Stop if we've reached the maximum number of frames
-            if max_frames and frame_count >= max_frames:
+            # Stop if we've reached the maximum number of frames (before appending)
+            if max_frames is not None and len(frames) >= max_frames:
                 print(f"Reached maximum frame limit: {max_frames}")
                 break
+                
+            frames.append(frame)
                 
     except MemoryError as e:
         cap.release()
