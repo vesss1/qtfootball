@@ -136,6 +136,10 @@ def get_video_properties(video_path):
     
     Raises:
         ValueError: If the video file cannot be opened.
+    
+    Note:
+        This function shares some logic with read_video() for property retrieval.
+        Future refactoring could extract this into a private helper function.
     """
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -153,6 +157,10 @@ def get_video_properties(video_path):
         raise ValueError(f"Invalid video dimensions: {width}x{height}. The video may be corrupted.")
     
     # Calculate duration
+    # Note: Some codecs return -1 for unknown frame count, so we ensure non-negative
+    if total_frames < 0:
+        total_frames = 0
+    
     duration = 0
     if total_frames > 0 and fps > 0:
         duration = total_frames / fps
@@ -161,7 +169,7 @@ def get_video_properties(video_path):
         'width': width,
         'height': height,
         'fps': fps,
-        'total_frames': max(0, total_frames),  # Avoid negative values
+        'total_frames': total_frames,
         'duration': duration
     }
 

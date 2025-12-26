@@ -11,7 +11,14 @@ Perfect for:
 - Preprocessing or analysis tasks that don't require all frames in memory
 """
 
-from utils import read_video_frames_generator, get_video_properties, save_video
+import sys
+import os
+import tempfile
+
+# Ensure we can import from the parent directory
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from football_analyzer.utils import read_video_frames_generator, get_video_properties, save_video
 import cv2
 import numpy as np
 
@@ -105,11 +112,10 @@ def main():
     Note: This requires a test video. For demonstration purposes,
     we'll create a small test video first.
     """
-    import sys
-    import os
     
-    # Check if video exists, otherwise create a test video
-    test_video = "/tmp/streaming_test_video.mp4"
+    # Use cross-platform temporary directory
+    temp_dir = tempfile.gettempdir()
+    test_video = os.path.join(temp_dir, 'streaming_test_video.mp4')
     
     if not os.path.exists(test_video):
         print("Creating test video...")
@@ -127,7 +133,7 @@ def main():
         print(f"✓ Created test video: {test_video}\n")
     
     # Example 1: Process and save (with frame storage)
-    output_video = "/tmp/streaming_output.mp4"
+    output_video = os.path.join(temp_dir, 'streaming_output.mp4')
     example_streaming_processing(test_video, output_video, max_frames=50)
     
     # Example 2: Process without storage (ultra memory-efficient)
