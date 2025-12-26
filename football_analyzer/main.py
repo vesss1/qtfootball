@@ -33,7 +33,7 @@ def main():
     
     # Step 1: Read video frames
     print("\n[1/9] Reading video...")
-    video_frames = read_video(config.INPUT_VIDEO_PATH)
+    video_frames = read_video(config.INPUT_VIDEO_PATH, max_frames=config.MAX_FRAMES)
     print(f"✓ Loaded {len(video_frames)} frames")
     
     # Step 2: Initialize tracker and detect objects
