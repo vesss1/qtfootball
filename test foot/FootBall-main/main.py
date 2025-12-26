@@ -1,3 +1,7 @@
+import subprocess
+import sys
+from pathlib import Path
+
 import torch
 from tqdm import tqdm
 from src.utils.team_classifer import TeamClassifier
@@ -10,13 +14,67 @@ from src.detections.player_detection import draw_annotation, get_detection
 # Clear any existing CUDA cache to optimize memory usage
 # torch.cuda.empty_cache()
 
+BASE_DIR = Path(__file__).resolve().parent
+BENCH_DIR = BASE_DIR.parent / "Football-brench"
+
 # Global variables for paths
-VIDEO_PATH = "./test_videos/trim.mp4"
-OBJ_MODEL_PATH = "./models/obj_v8x.pt"
-POSE_MODEL_PATH = "./models/pose_v8x.pt"
-OUTPUT_PATH = "./output_videos/five_obj.mp4"
-STUBS_PATH_OBJ = "./stub/five_obj.pkl"
+VIDEO_PATH = str(BASE_DIR / "test_videos/trim.mp4")
+OBJ_MODEL_PATH = str(BASE_DIR / "models/obj_v8x.pt")
+POSE_MODEL_PATH = str(BASE_DIR / "models/pose_v8x.pt")
+OUTPUT_PATH = BASE_DIR / "output_videos/five_obj.mp4"
+STUBS_PATH_OBJ = str(BASE_DIR / "stub/five_obj.pkl")
 STUBS_STATUS = False
+
+
+def run_bench_pipeline():
+    """Execute the Football-brench pipeline so extra features are integrated."""
+    script_path = BENCH_DIR / "main.py"
+    if not script_path.exists():
+        sys.stderr.write(f"Bench pipeline not found at {script_path}\n")
+        return None
+
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        cwd=BENCH_DIR,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    if result.returncode != 0:
+        sys.stderr.write(
+            f"Bench pipeline failed with code {result.returncode}:\n"
+        )
+        sys.stderr.write(result.stderr.decode("utf-8", errors="ignore"))
+        return None
+
+    output_dir = BENCH_DIR / "output_videos"
+    default_output = output_dir / "output.avi"
+    if default_output.exists():
+        return default_output
+
+    outputs = sorted(output_dir.glob("*.*"))
+    if outputs:
+        return outputs[0]
+
+    sys.stderr.write(
+        f"Bench pipeline completed but no output found in {output_dir}\n"
+    )
+
+    return None
+
+
+def write_all_manifest(main_output, bench_output):
+    """Record available outputs into a single manifest file."""
+    all_path = BASE_DIR / "output_videos" / "All.txt"
+    all_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(all_path, "w", encoding="utf-8") as manifest:
+        manifest.write(f"main_output={main_output}\n")
+        if bench_output:
+            manifest.write(f"bench_output={bench_output}\n")
+        else:
+            manifest.write("bench_output=unavailable\n")
 
 def main():
 
@@ -83,7 +141,10 @@ def main():
         assigned_players
     )
     
-    save_video(annotated_frames, OUTPUT_PATH)
+    save_video(annotated_frames, str(OUTPUT_PATH))
+
+    bench_output = run_bench_pipeline()
+    write_all_manifest(OUTPUT_PATH, bench_output)
 
 
 if __name__ == "__main__":

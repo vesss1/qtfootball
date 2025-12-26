@@ -11,6 +11,7 @@
 - **Ball Assignment**: Assigns the ball to the closest player and tracks its location.
 - **Homography for Player Location**: Computes player locations using homography transformations.
 - **Video Processing**: Processes football match videos and analyzes events.
+- **Integrated Bench Features**: Running `python main.py` now also triggers the extra pipeline from `Football-brench` and records both outputs in `output_videos/All.txt`.
 
 ## Future Improvements
 
@@ -59,5 +60,4 @@ Contributions are welcome! Feel free to fork this project and submit pull reques
 - Thanks to **Piotr Skalski** for his valuable tutorial.
 - The **YOLO** algorithm and its developers.
 - OpenCV, KMeans, and other open-source libraries used in the project.
-
 
