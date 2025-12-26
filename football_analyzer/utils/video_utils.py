@@ -49,15 +49,21 @@ def read_video(video_path, max_frames=None):
     
     # Estimate memory requirement (3 bytes per pixel for BGR)
     if total_frames == float('inf'):
-        frames_to_read = max_frames if max_frames is not None else 0
-        estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024) if frames_to_read > 0 else 0
-        print(f"Video info: {width}x{height}, unknown frame count, {fps:.2f} fps")
+        if max_frames is not None:
+            frames_to_read = max_frames
+            estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024)
+            print(f"Video info: {width}x{height}, unknown frame count, {fps:.2f} fps")
+            print(f"Estimated memory required: {estimated_memory_mb:.2f} MB for {frames_to_read} frames")
+        else:
+            # Unknown frame count and no limit - can't estimate memory
+            print(f"Video info: {width}x{height}, unknown frame count, {fps:.2f} fps")
+            print(f"WARNING: Cannot estimate memory usage (unknown frame count). Consider using max_frames parameter.")
+            estimated_memory_mb = 0  # Can't estimate
+            frames_to_read = 0
     else:
         frames_to_read = min(total_frames, max_frames) if max_frames is not None else total_frames
         estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024)
         print(f"Video info: {width}x{height}, {total_frames} frames, {fps:.2f} fps")
-    
-    if frames_to_read > 0:
         print(f"Estimated memory required: {estimated_memory_mb:.2f} MB for {frames_to_read} frames")
     
     # Skip reading if max_frames is 0
@@ -71,11 +77,12 @@ def read_video(video_path, max_frames=None):
         print("Consider using max_frames parameter to limit memory usage")
     
     frames = []
-    frame_count = 0
+    frame_count = 0  # Tracks number of frames successfully read
     
     try:
         while True:
-            # Stop if we've reached the maximum number of frames (before reading)
+            # Stop if we've reached the maximum number of frames
+            # (check before reading the next frame)
             if max_frames is not None and frame_count >= max_frames:
                 print(f"Reached maximum frame limit: {max_frames}")
                 break
@@ -84,7 +91,7 @@ def read_video(video_path, max_frames=None):
             if not ret:
                 break
             
-            frame_count += 1
+            frame_count += 1  # Increment after successful read
             frames.append(frame)
                 
     except MemoryError as e:
