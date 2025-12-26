@@ -2,120 +2,27 @@ import cv2
 from tqdm import tqdm
 
 
-# Memory warning threshold in MB (warn if video requires more than this)
-MEMORY_WARNING_THRESHOLD_MB = 8000
-
-
-def read_video(video_path, max_frames=None):
+def read_video(video_path):
     """
     Reads a video and returns a list of frames.
 
     Parameters:
         video_path (str): The path to the video file.
-        max_frames (int, optional): Maximum number of frames to read. 
-                                   If None, reads all frames. Set to 0 to read no frames.
-                                   Must be non-negative.
-                                   Useful for memory-constrained environments or testing.
 
     Returns:
         list: A list of frames in the video.
-    
-    Raises:
-        ValueError: If the video file cannot be opened, contains no frames, or max_frames is negative.
-        MemoryError: If there's not enough memory to load the video frames.
     """
-    # Validate max_frames
-    if max_frames is not None and max_frames < 0:
-        raise ValueError(f"max_frames must be non-negative, got {max_frames}")
-    
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Error: Could not open video {video_path}")
     
-    # Get video properties for memory estimation
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    
-    # Validate video properties
-    if width <= 0 or height <= 0:
-        cap.release()
-        raise ValueError(f"Invalid video dimensions: {width}x{height}. The video may be corrupted.")
-    
-    if total_frames <= 0:
-        # Some codecs return -1 or 0 for frame count, we'll try to read anyway
-        total_frames = float('inf')  # Unknown number of frames
-    
-    # Estimate memory requirement (3 bytes per pixel for BGR)
-    if total_frames == float('inf'):
-        if max_frames is not None:
-            frames_to_read = max_frames
-            estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024)
-            print(f"Video info: {width}x{height}, unknown frame count, {fps:.2f} fps")
-            print(f"Estimated memory required: {estimated_memory_mb:.2f} MB for {frames_to_read} frames")
-        else:
-            # Unknown frame count and no limit - can't estimate memory
-            print(f"Video info: {width}x{height}, unknown frame count, {fps:.2f} fps")
-            print(f"WARNING: Cannot estimate memory usage (unknown frame count). Consider using max_frames parameter.")
-            estimated_memory_mb = 0  # Can't estimate
-            frames_to_read = 0
-    else:
-        frames_to_read = min(total_frames, max_frames) if max_frames is not None else total_frames
-        estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024)
-        print(f"Video info: {width}x{height}, {total_frames} frames, {fps:.2f} fps")
-        print(f"Estimated memory required: {estimated_memory_mb:.2f} MB for {frames_to_read} frames")
-    
-    # Skip reading if max_frames is 0
-    if max_frames == 0:
-        print(f"max_frames is set to 0, so no frames will be loaded")
-        cap.release()
-        return []
-    
-    # Warning for large memory requirements or unknown size without limit
-    if estimated_memory_mb > MEMORY_WARNING_THRESHOLD_MB:
-        print(f"WARNING: Video requires approximately {estimated_memory_mb/1024:.2f} GB of memory")
-        print("Consider using max_frames parameter to limit memory usage")
-    elif total_frames == float('inf') and max_frames is None:
-        # Already warned above in the unknown frame count case, but emphasize again
-        print(f"WARNING: Loading entire video with unknown frame count may cause memory issues")
-        print("Consider using max_frames parameter to limit memory usage")
-    
     frames = []
-    frame_count = 0  # Tracks number of frames successfully read
-    
-    try:
-        while True:
-            # Stop if we've reached the maximum number of frames
-            # (check before reading the next frame)
-            if max_frames is not None and frame_count >= max_frames:
-                print(f"Reached maximum frame limit: {max_frames}")
-                break
-            
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            frames.append(frame)
-            frame_count += 1  # Increment after successful append
-                
-    except MemoryError as e:
-        cap.release()
-        raise MemoryError(
-            f"Out of memory after loading {len(frames)} frames. "
-            f"Video requires too much memory ({estimated_memory_mb:.2f} MB estimated). "
-            f"Try using max_frames parameter to load fewer frames, or process the video in smaller chunks."
-        ) from e
-    except Exception as e:
-        cap.release()
-        raise RuntimeError(f"Error reading video after {frame_count} frames: {str(e)}") from e
-    
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frames.append(frame)
     cap.release()
-    
-    if len(frames) == 0 and (max_frames is None or max_frames > 0):
-        raise ValueError(f"No frames were read from video {video_path}. The video may be empty or corrupted.")
-    
-    print(f"Successfully loaded {len(frames)} frames")
     return frames
 
 

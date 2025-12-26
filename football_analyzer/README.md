@@ -135,35 +135,12 @@ football_analyzer/
    INPUT_VIDEO_PATH = "input_videos/your_video.mp4"
    OUTPUT_VIDEO_PATH = "output_videos/output.mp4"
    MODEL_PATH = "models/best.pt"
-   
-   # Optional: Limit frames for memory-constrained environments
-   MAX_FRAMES = None  # or set to a number like 300
    ```
 
 4. **Run the analysis:**
    ```bash
    python main.py
    ```
-
-### Memory Management
-
-For large videos or memory-constrained systems, you can limit the number of frames processed:
-
-```python
-# In config.py
-MAX_FRAMES = 300  # Process only first 300 frames (~12 seconds at 24 fps)
-```
-
-The system will:
-- Display video information (resolution, total frames, FPS)
-- Estimate memory requirements before loading
-- Warn if the video requires more than 8GB of memory
-- Stop loading after reaching MAX_FRAMES limit
-
-This is useful for:
-- Testing the pipeline on a small portion of a video
-- Systems with limited RAM
-- Processing only specific parts of long matches
 
 ### Processing Steps
 
@@ -249,10 +226,6 @@ This unified system combines features and insights from:
 
 ## 🐛 Troubleshooting
 
-**Issue**: Memory allocation error or out of memory
-- **Solution**: Set `MAX_FRAMES` in `config.py` to a smaller number (e.g., 300) to limit memory usage
-- **Details**: The video reader will show estimated memory requirements and allow you to process videos in smaller chunks
-
 **Issue**: CUDA out of memory
 - **Solution**: Reduce batch size in tracker or process fewer frames at once
 
@@ -261,9 +234,6 @@ This unified system combines features and insights from:
 
 **Issue**: Ball not detected
 - **Solution**: Retrain model with more ball examples or adjust confidence threshold
-
-**Issue**: Video file cannot be opened
-- **Solution**: Verify the video path is correct and the file format is supported (mp4, avi, etc.)
 
 ## 📧 Contact
 
