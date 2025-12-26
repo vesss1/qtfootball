@@ -147,7 +147,11 @@ football_analyzer/
 
 ### Memory Management
 
-For large videos or memory-constrained systems, you can limit the number of frames processed:
+For large videos or memory-constrained systems, the system provides multiple options:
+
+#### Option 1: Limit Frames (Recommended)
+
+Set a maximum number of frames to process in `config.py`:
 
 ```python
 # In config.py
@@ -160,10 +164,46 @@ The system will:
 - Warn if the video requires more than 8GB of memory
 - Stop loading after reaching MAX_FRAMES limit
 
+**Memory Usage Example:**
+- 1920x1080 video at 60 fps for 10 seconds = ~3.7 GB RAM
+- 1920x1080 video at 60 fps for 60 seconds = ~22 GB RAM
+- 3840x2160 (4K) video at 60 fps for 10 seconds = ~14.7 GB RAM
+
+#### Option 2: Frame-by-Frame Processing (Advanced)
+
+For extremely memory-constrained environments, use the streaming API:
+
+```python
+from utils import read_video_frames_generator, get_video_properties
+
+# Get video info without loading frames
+props = get_video_properties('input_videos/video.mp4')
+print(f"Video: {props['width']}x{props['height']}, {props['total_frames']} frames")
+
+# Process frames one at a time (minimal memory usage)
+for frame_idx, frame in read_video_frames_generator('input_videos/video.mp4', max_frames=500):
+    # Process each frame individually
+    # Memory usage stays constant regardless of video length
+    processed = process_frame(frame)
+```
+
+**Note:** The main pipeline requires all frames in memory for multi-pass processing (tracking, team assignment, etc.). The streaming API is useful for custom workflows or preprocessing.
+
+#### Memory Usage Guidelines
+
+| Video Duration @ 60fps | Resolution | Estimated RAM | Recommended MAX_FRAMES |
+|------------------------|------------|---------------|------------------------|
+| 10 seconds | 1920x1080 | ~3.7 GB | 600 |
+| 30 seconds | 1920x1080 | ~11 GB | 300-600 |
+| 60 seconds | 1920x1080 | ~22 GB | 150-300 |
+| 10 seconds | 3840x2160 (4K) | ~14.7 GB | 300-600 |
+| 30 seconds | 3840x2160 (4K) | ~44 GB | 150-300 |
+
 This is useful for:
 - Testing the pipeline on a small portion of a video
-- Systems with limited RAM
+- Systems with limited RAM (< 16 GB)
 - Processing only specific parts of long matches
+- Avoiding OpenCV "Insufficient memory" errors
 
 ### Processing Steps
 
