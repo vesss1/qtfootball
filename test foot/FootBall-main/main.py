@@ -15,7 +15,7 @@ from src.detections.player_detection import draw_annotation, get_detection
 # torch.cuda.empty_cache()
 
 BASE_DIR = Path(__file__).resolve().parent
-BRENCH_DIR = BASE_DIR.parent / "Football-brench"
+BENCH_DIR = BASE_DIR.parent / "Football-brench"
 
 # Global variables for paths
 VIDEO_PATH = str(BASE_DIR / "test_videos/trim.mp4")
@@ -26,37 +26,55 @@ STUBS_PATH_OBJ = str(BASE_DIR / "stub/five_obj.pkl")
 STUBS_STATUS = False
 
 
-def run_brench_pipeline():
-    """Execute the FootBall-brench pipeline so extra features are integrated."""
-    script_path = BRENCH_DIR / "main.py"
+def run_bench_pipeline():
+    """Execute the Football-brench pipeline so extra features are integrated."""
+    script_path = BENCH_DIR / "main.py"
     if not script_path.exists():
+        sys.stderr.write(f"Bench pipeline not found at {script_path}\n")
         return None
 
     result = subprocess.run(
         [sys.executable, str(script_path)],
-        cwd=BRENCH_DIR,
+        cwd=BENCH_DIR,
         check=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
 
     if result.returncode != 0:
+        sys.stderr.write(
+            f"Bench pipeline failed with code {result.returncode}:\n"
+        )
+        sys.stderr.write(result.stderr.decode("utf-8", errors="ignore"))
         return None
 
-    return BRENCH_DIR / "output_videos" / "output.avi"
+    output_dir = BENCH_DIR / "output_videos"
+    default_output = output_dir / "output.avi"
+    if default_output.exists():
+        return default_output
+
+    outputs = sorted(output_dir.glob("*.*"))
+    if outputs:
+        return outputs[0]
+
+    sys.stderr.write(
+        f"Bench pipeline completed but no output found in {output_dir}\n"
+    )
+
+    return None
 
 
-def write_all_manifest(main_output, brench_output):
+def write_all_manifest(main_output, bench_output):
     """Record available outputs into a single manifest file."""
     all_path = BASE_DIR / "output_videos" / "All.txt"
     all_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(all_path, "w", encoding="utf-8") as manifest:
         manifest.write(f"main_output={main_output}\n")
-        if brench_output:
-            manifest.write(f"brench_output={brench_output}\n")
+        if bench_output:
+            manifest.write(f"bench_output={bench_output}\n")
         else:
-            manifest.write("brench_output=unavailable\n")
+            manifest.write("bench_output=unavailable\n")
 
 def main():
 
@@ -125,8 +143,8 @@ def main():
     
     save_video(annotated_frames, str(OUTPUT_PATH))
 
-    brench_output = run_brench_pipeline()
-    write_all_manifest(OUTPUT_PATH, brench_output)
+    bench_output = run_bench_pipeline()
+    write_all_manifest(OUTPUT_PATH, bench_output)
 
 
 if __name__ == "__main__":
