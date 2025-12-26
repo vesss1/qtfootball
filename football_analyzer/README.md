@@ -79,6 +79,8 @@ Main dependencies:
 ```
 football_analyzer/
 ├── main.py                          # Main entry point
+├── config.py                        # Configuration settings
+├── check_setup.py                   # Setup verification script
 ├── requirements.txt                 # Python dependencies
 ├── README.md                        # This file
 │
@@ -121,16 +123,21 @@ football_analyzer/
 
 ### Basic Usage
 
-1. **Place your video** in the `input_videos/` directory
+1. **Check your setup** (recommended first step):
+   ```bash
+   python check_setup.py
+   ```
 
-2. **Configure paths** in `main.py`:
+2. **Place your video** in the `input_videos/` directory
+
+3. **Configure paths** in `config.py`:
    ```python
    INPUT_VIDEO_PATH = "input_videos/your_video.mp4"
    OUTPUT_VIDEO_PATH = "output_videos/output.mp4"
    MODEL_PATH = "models/best.pt"
    ```
 
-3. **Run the analysis:**
+4. **Run the analysis:**
    ```bash
    python main.py
    ```
@@ -151,7 +158,7 @@ The system processes videos through these stages:
 
 ### Using Cached Results
 
-For faster iteration, intermediate results can be cached:
+For faster iteration, intermediate results can be cached. Edit `config.py`:
 
 ```python
 USE_STUBS = True  # Set to False to recompute everything
