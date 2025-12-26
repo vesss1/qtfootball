@@ -14,15 +14,20 @@ def read_video(video_path, max_frames=None):
         video_path (str): The path to the video file.
         max_frames (int, optional): Maximum number of frames to read. 
                                    If None, reads all frames. Set to 0 to read no frames.
+                                   Must be non-negative.
                                    Useful for memory-constrained environments or testing.
 
     Returns:
         list: A list of frames in the video.
     
     Raises:
-        ValueError: If the video file cannot be opened or contains no frames.
+        ValueError: If the video file cannot be opened, contains no frames, or max_frames is negative.
         MemoryError: If there's not enough memory to load the video frames.
     """
+    # Validate max_frames
+    if max_frames is not None and max_frames < 0:
+        raise ValueError(f"max_frames must be non-negative, got {max_frames}")
+    
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Error: Could not open video {video_path}")
@@ -33,15 +38,30 @@ def read_video(video_path, max_frames=None):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
     
-    # Estimate memory requirement (3 bytes per pixel for BGR)
-    frames_to_read = min(total_frames, max_frames) if max_frames is not None else total_frames
-    estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024)
+    # Validate video properties
+    if width <= 0 or height <= 0:
+        cap.release()
+        raise ValueError(f"Invalid video dimensions: {width}x{height}. The video may be corrupted.")
     
-    print(f"Video info: {width}x{height}, {total_frames} frames, {fps:.2f} fps")
-    print(f"Estimated memory required: {estimated_memory_mb:.2f} MB for {frames_to_read} frames")
+    if total_frames <= 0:
+        # Some codecs return -1 or 0 for frame count, we'll try to read anyway
+        total_frames = float('inf')  # Unknown number of frames
+    
+    # Estimate memory requirement (3 bytes per pixel for BGR)
+    if total_frames == float('inf'):
+        frames_to_read = max_frames if max_frames is not None else 0
+        estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024) if frames_to_read > 0 else 0
+        print(f"Video info: {width}x{height}, unknown frame count, {fps:.2f} fps")
+    else:
+        frames_to_read = min(total_frames, max_frames) if max_frames is not None else total_frames
+        estimated_memory_mb = (width * height * 3 * frames_to_read) / (1024 * 1024)
+        print(f"Video info: {width}x{height}, {total_frames} frames, {fps:.2f} fps")
+    
+    if frames_to_read > 0:
+        print(f"Estimated memory required: {estimated_memory_mb:.2f} MB for {frames_to_read} frames")
     
     # Skip reading if max_frames is 0
-    if max_frames is not None and max_frames == 0:
+    if max_frames == 0:
         print(f"max_frames is set to 0, no frames will be loaded")
         cap.release()
         return []
@@ -55,17 +75,16 @@ def read_video(video_path, max_frames=None):
     
     try:
         while True:
+            # Stop if we've reached the maximum number of frames (before reading)
+            if max_frames is not None and frame_count >= max_frames:
+                print(f"Reached maximum frame limit: {max_frames}")
+                break
+            
             ret, frame = cap.read()
             if not ret:
                 break
             
             frame_count += 1
-            
-            # Stop if we've reached the maximum number of frames (before appending)
-            if max_frames is not None and len(frames) >= max_frames:
-                print(f"Reached maximum frame limit: {max_frames}")
-                break
-                
             frames.append(frame)
                 
     except MemoryError as e:
@@ -77,7 +96,7 @@ def read_video(video_path, max_frames=None):
         ) from e
     except Exception as e:
         cap.release()
-        raise RuntimeError(f"Error reading video at frame {frame_count}: {str(e)}") from e
+        raise RuntimeError(f"Error reading video after {frame_count} frames: {str(e)}") from e
     
     cap.release()
     
