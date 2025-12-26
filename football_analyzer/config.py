@@ -62,12 +62,14 @@ MAX_PLAYER_BALL_DISTANCE = 70
 
 # ===== VIEW TRANSFORMER SETTINGS =====
 # Football field dimensions in meters
-FIELD_WIDTH = 68  # meters
-FIELD_LENGTH = 23.32  # meters (this seems small, typical is ~105m)
+FIELD_WIDTH = 68  # meters (standard width)
+FIELD_LENGTH = 23.32  # meters
 
-# Note: You may need to adjust FIELD_LENGTH based on your video
-# Standard football pitch: 105m x 68m
-# You can customize these based on the actual field in your video
+# Note: The FIELD_LENGTH value (23.32m) appears to be from the original code
+# and may represent a portion of the field visible in the camera view, not the
+# full field length. Standard football pitch length is 100-110 meters.
+# Adjust these values based on your specific video's field of view and
+# the corner points you're using for perspective transformation.
 
 
 # ===== VIDEO OUTPUT SETTINGS =====
