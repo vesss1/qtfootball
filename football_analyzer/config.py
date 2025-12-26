@@ -13,6 +13,11 @@ OUTPUT_VIDEO_PATH = "output_videos/output.mp4"
 # Path to YOLO model weights
 MODEL_PATH = "models/best.pt"
 
+# Maximum number of frames to process (None for all frames)
+# Use this to limit memory usage when processing large videos
+# For example, set to 300 to process only the first 300 frames (~12 seconds at 24 fps)
+MAX_FRAMES = None
+
 
 # ===== CACHING CONFIGURATION =====
 # Use cached intermediate results for faster processing
