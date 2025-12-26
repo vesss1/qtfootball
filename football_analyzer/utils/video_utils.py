@@ -68,12 +68,17 @@ def read_video(video_path, max_frames=None):
     
     # Skip reading if max_frames is 0
     if max_frames == 0:
-        print(f"max_frames is set to 0, no frames will be loaded")
+        print(f"max_frames is set to 0, so no frames will be loaded")
         cap.release()
         return []
     
+    # Warning for large memory requirements or unknown size without limit
     if estimated_memory_mb > MEMORY_WARNING_THRESHOLD_MB:
         print(f"WARNING: Video requires approximately {estimated_memory_mb/1024:.2f} GB of memory")
+        print("Consider using max_frames parameter to limit memory usage")
+    elif total_frames == float('inf') and max_frames is None:
+        # Already warned above in the unknown frame count case, but emphasize again
+        print(f"WARNING: Loading entire video with unknown frame count may cause memory issues")
         print("Consider using max_frames parameter to limit memory usage")
     
     frames = []
@@ -91,8 +96,8 @@ def read_video(video_path, max_frames=None):
             if not ret:
                 break
             
-            frame_count += 1  # Increment after successful read
             frames.append(frame)
+            frame_count += 1  # Increment after successful append
                 
     except MemoryError as e:
         cap.release()
