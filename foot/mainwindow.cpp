@@ -18,11 +18,9 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect practice tracking buttons
     connect(ui->pushButtonStartPractice, &QPushButton::clicked, this, &MainWindow::onStartPracticeClicked);
     connect(ui->pushButtonRecordGoal, &QPushButton::clicked, this, &MainWindow::onRecordGoalClicked);
-    connect(ui->pushButtonRecordMiss, &QPushButton::clicked, this, &MainWindow::onRecordGoalClicked);
+    connect(ui->pushButtonRecordMiss, &QPushButton::clicked, this, &MainWindow::onRecordMissClicked);
     connect(ui->pushButtonEndPractice, &QPushButton::clicked, this, &MainWindow::onEndPracticeClicked);
     connect(ui->pushButtonShowStats, &QPushButton::clicked, this, &MainWindow::onShowStatsClicked);
-    connect(ui->comboBoxPracticePlayer, QOverload<int>::of(&QComboBox::currentIndexChanged), 
-            this, &MainWindow::onPlayerSelectionChanged);
     
     // Set table properties
     ui->tableWidgetPlayers->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -109,20 +107,23 @@ void MainWindow::onRecordGoalClicked()
         return;
     }
     
-    QPushButton* button = qobject_cast<QPushButton*>(sender());
-    if (button == ui->pushButtonRecordGoal) {
-        currentSuccessfulGoals++;
-    }
+    currentSuccessfulGoals++;
     currentAttempts++;
     
     updatePracticeDisplay();
-    
-    // Auto-end if reached planned attempts
-    int plannedAttempts = ui->spinBoxTotalAttempts->value();
-    if (currentAttempts >= plannedAttempts) {
-        QMessageBox::information(this, "提示", "已完成計劃的嘗試次數！");
-        onEndPracticeClicked();
+    checkAndAutoEndPractice();
+}
+
+void MainWindow::onRecordMissClicked()
+{
+    if (!practiceInProgress) {
+        return;
     }
+    
+    currentAttempts++;
+    
+    updatePracticeDisplay();
+    checkAndAutoEndPractice();
 }
 
 void MainWindow::onEndPracticeClicked()
@@ -131,8 +132,11 @@ void MainWindow::onEndPracticeClicked()
         return;
     }
     
-    // Stop timer
-    qint64 elapsed = practiceTimer.elapsed();
+    // Stop timer and get elapsed time
+    qint64 elapsed = 0;
+    if (practiceTimer.isValid()) {
+        elapsed = practiceTimer.elapsed();
+    }
     
     // Save practice session
     PracticeSession session;
@@ -151,8 +155,7 @@ void MainWindow::onEndPracticeClicked()
     }
     
     // Show summary
-    double successRate = currentAttempts > 0 ? 
-        (static_cast<double>(currentSuccessfulGoals) / currentAttempts * 100.0) : 0.0;
+    double successRate = calculateSuccessRate(currentSuccessfulGoals, currentAttempts);
     QString summary = QString("練習完成！\n\n"
                              "球員: %1\n"
                              "距離: %2 碼\n"
@@ -165,7 +168,7 @@ void MainWindow::onEndPracticeClicked()
                         .arg(currentAttempts)
                         .arg(currentSuccessfulGoals)
                         .arg(successRate, 0, 'f', 1)
-                        .arg(elapsed / 1000.0, 0, 'f', 1);
+                        .arg(convertToSeconds(elapsed), 0, 'f', 1);
     
     QMessageBox::information(this, "練習記錄", summary);
     
@@ -184,11 +187,6 @@ void MainWindow::onEndPracticeClicked()
     updateStatsTable();
 }
 
-void MainWindow::onPlayerSelectionChanged()
-{
-    // Can be used for future enhancements
-}
-
 void MainWindow::onShowStatsClicked()
 {
     updateStatsTable();
@@ -197,9 +195,12 @@ void MainWindow::onShowStatsClicked()
 
 void MainWindow::updatePracticeDisplay()
 {
+    if (!practiceInProgress || !practiceTimer.isValid()) {
+        return;
+    }
+    
     int plannedAttempts = ui->spinBoxTotalAttempts->value();
-    double successRate = currentAttempts > 0 ? 
-        (static_cast<double>(currentSuccessfulGoals) / currentAttempts * 100.0) : 0.0;
+    double successRate = calculateSuccessRate(currentSuccessfulGoals, currentAttempts);
     qint64 elapsed = practiceTimer.elapsed();
     
     QString info = QString("進行中 - %1\n距離: %2 碼 | 進度: %3/%4\n成功: %5 | 成功率: %6% | 時間: %7 秒")
@@ -209,7 +210,7 @@ void MainWindow::updatePracticeDisplay()
                     .arg(plannedAttempts)
                     .arg(currentSuccessfulGoals)
                     .arg(successRate, 0, 'f', 1)
-                    .arg(elapsed / 1000.0, 0, 'f', 1);
+                    .arg(convertToSeconds(elapsed), 0, 'f', 1);
     
     ui->labelPracticeInfo->setText(info);
 }
@@ -223,9 +224,8 @@ void MainWindow::updateStatsTable()
             int row = ui->tableWidgetStats->rowCount();
             ui->tableWidgetStats->insertRow(row);
             
-            double successRate = session.totalAttempts > 0 ?
-                (static_cast<double>(session.successfulGoals) / session.totalAttempts * 100.0) : 0.0;
-            double timeInSeconds = session.timeSpent / 1000.0;
+            double successRate = calculateSuccessRate(session.successfulGoals, session.totalAttempts);
+            double timeInSeconds = convertToSeconds(session.timeSpent);
             
             ui->tableWidgetStats->setItem(row, 0, new QTableWidgetItem(player.name));
             ui->tableWidgetStats->setItem(row, 1, new QTableWidgetItem(QString::number(session.distance)));
@@ -237,27 +237,21 @@ void MainWindow::updateStatsTable()
     }
 }
 
-QString MainWindow::calculatePlayerStats(const Player &player)
+void MainWindow::checkAndAutoEndPractice()
 {
-    if (player.practiceSessions.isEmpty()) {
-        return "無練習記錄";
+    int plannedAttempts = ui->spinBoxTotalAttempts->value();
+    if (currentAttempts >= plannedAttempts) {
+        QMessageBox::information(this, "提示", "已完成計劃的嘗試次數！");
+        onEndPracticeClicked();
     }
-    
-    int totalAttempts = 0;
-    int totalSuccessful = 0;
-    qint64 totalTime = 0;
-    
-    for (const PracticeSession &session : player.practiceSessions) {
-        totalAttempts += session.totalAttempts;
-        totalSuccessful += session.successfulGoals;
-        totalTime += session.timeSpent;
-    }
-    
-    double overallSuccessRate = totalAttempts > 0 ?
-        (static_cast<double>(totalSuccessful) / totalAttempts * 100.0) : 0.0;
-    
-    return QString("總共 %1 次練習, 成功率: %2%, 總時間: %3 秒")
-            .arg(player.practiceSessions.size())
-            .arg(overallSuccessRate, 0, 'f', 1)
-            .arg(totalTime / 1000.0, 0, 'f', 1);
+}
+
+double MainWindow::calculateSuccessRate(int successful, int total) const
+{
+    return total > 0 ? (static_cast<double>(successful) / total * 100.0) : 0.0;
+}
+
+double MainWindow::convertToSeconds(qint64 milliseconds) const
+{
+    return milliseconds / 1000.0;
 }

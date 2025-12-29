@@ -39,14 +39,16 @@ private slots:
     void onAddPlayerClicked();
     void onStartPracticeClicked();
     void onRecordGoalClicked();
+    void onRecordMissClicked();
     void onEndPracticeClicked();
-    void onPlayerSelectionChanged();
     void onShowStatsClicked();
 
 private:
     void updatePracticeDisplay();
     void updateStatsTable();
-    QString calculatePlayerStats(const Player &player);
+    void checkAndAutoEndPractice();
+    double calculateSuccessRate(int successful, int total) const;
+    double convertToSeconds(qint64 milliseconds) const;
     
     Ui::MainWindow *ui;
     QVector<Player> players;
