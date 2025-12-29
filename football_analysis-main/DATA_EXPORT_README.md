@@ -4,12 +4,14 @@
 
 The football analysis system now supports **data extraction** from the output video. All information displayed on the video (player tracking, ball possession, camera movement, speed/distance metrics) can be exported to structured data files for further analysis.
 
+> **Note about Player IDs**: The `player_id` in exported data is the **Track ID** assigned by the ByteTrack algorithm. This is the same number displayed above each player in the output video. See [PLAYER_NUMBERS_EXPLAINED_球員號碼說明.md](PLAYER_NUMBERS_EXPLAINED_球員號碼說明.md) for more details.
+
 ## Exported Data
 
 The system extracts the following information:
 
 ### Player Data (per frame)
-- Player ID
+- Player ID (Track ID assigned by ByteTrack - same as number shown in video)
 - Team assignment (1 or 2)
 - Team color (RGB)
 - Bounding box coordinates (x1, y1, x2, y2)

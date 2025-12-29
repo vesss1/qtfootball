@@ -10,11 +10,20 @@ sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width, get_foot_position
 
 class Tracker:
+    """
+    Object tracker using YOLO for detection and ByteTrack for tracking.
+    
+    The tracker assigns unique IDs (track_id) to each detected player, which are
+    displayed as numbers in the output video. These IDs are automatically generated
+    and maintained by the ByteTrack algorithm across video frames.
+    """
     def __init__(self, model_path):
         self.model = YOLO(model_path) 
+        # ByteTrack: Multi-object tracking algorithm that assigns and maintains
+        # unique IDs for detected objects across frames
         self.tracker = sv.ByteTrack()
 
-    def add_position_to_tracks(sekf,tracks):
+    def add_position_to_tracks(self,tracks):
         for object, object_tracks in tracks.items():
             for frame_num, track in enumerate(object_tracks):
                 for track_id, track_info in track.items():
@@ -73,6 +82,9 @@ class Tracker:
                     detection_supervision.class_id[object_ind] = cls_names_inv["player"]
 
             # Track Objects
+            # ByteTrack assigns unique track_id to each detected object
+            # These IDs persist across frames as long as the object is continuously tracked
+            # If an object disappears and reappears, it may get a new ID
             detection_with_tracks = self.tracker.update_with_detections(detection_supervision)
 
             tracks["players"].append({})
@@ -82,6 +94,8 @@ class Tracker:
             for frame_detection in detection_with_tracks:
                 bbox = frame_detection[0].tolist()
                 cls_id = frame_detection[3]
+                # track_id: Unique identifier assigned by ByteTrack
+                # This is the number displayed above each player in the output video
                 track_id = frame_detection[4]
 
                 if cls_id == cls_names_inv['player']:
@@ -104,6 +118,15 @@ class Tracker:
         return tracks
     
     def draw_ellipse(self,frame,bbox,color,track_id=None):
+        """
+        Draw an ellipse around a player and display their track_id number.
+        
+        Args:
+            frame: Video frame to draw on
+            bbox: Bounding box coordinates
+            color: Color for the ellipse and number box
+            track_id: Unique identifier assigned by ByteTrack (displayed as player number)
+        """
         y2 = int(bbox[3])
         x_center, _ = get_center_of_bbox(bbox)
         width = get_bbox_width(bbox)
@@ -127,6 +150,7 @@ class Tracker:
         y1_rect = (y2- rectangle_height//2) +15
         y2_rect = (y2+ rectangle_height//2) +15
 
+        # Draw the track_id number above each player
         if track_id is not None:
             cv2.rectangle(frame,
                           (int(x1_rect),int(y1_rect) ),
