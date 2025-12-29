@@ -305,24 +305,31 @@ bool MainWindow::loadVideoAnalysisData(const QString &filePath)
     
     QJsonObject metadata = root["metadata"].toObject();
     
-    videoAnalysisData.totalFrames = metadata["total_frames"].toInt();
-    videoAnalysisData.team1PossessionPercent = metadata["team_1_ball_control_percent"].toDouble();
-    videoAnalysisData.team2PossessionPercent = metadata["team_2_ball_control_percent"].toDouble();
-    videoAnalysisData.team1AttackPercent = metadata["team_1_attack_percent"].toDouble();
-    videoAnalysisData.team2AttackPercent = metadata["team_2_attack_percent"].toDouble();
-    videoAnalysisData.team1AttackFrames = metadata["team_1_attack_frames"].toInt();
-    videoAnalysisData.team2AttackFrames = metadata["team_2_attack_frames"].toInt();
+    // Validate that all required fields exist
+    QStringList requiredFields = {
+        "total_frames", "team_1_ball_control_percent", "team_2_ball_control_percent",
+        "team_1_attack_percent", "team_2_attack_percent"
+    };
+    
+    for (const QString &field : requiredFields) {
+        if (!metadata.contains(field)) {
+            return false;
+        }
+    }
+    
+    // Extract data with default values as fallback
+    videoAnalysisData.totalFrames = metadata.value("total_frames").toInt(0);
+    videoAnalysisData.team1PossessionPercent = metadata.value("team_1_ball_control_percent").toDouble(0.0);
+    videoAnalysisData.team2PossessionPercent = metadata.value("team_2_ball_control_percent").toDouble(0.0);
+    videoAnalysisData.team1AttackPercent = metadata.value("team_1_attack_percent").toDouble(0.0);
+    videoAnalysisData.team2AttackPercent = metadata.value("team_2_attack_percent").toDouble(0.0);
+    videoAnalysisData.team1AttackFrames = metadata.value("team_1_attack_frames").toInt(0);
+    videoAnalysisData.team2AttackFrames = metadata.value("team_2_attack_frames").toInt(0);
     videoAnalysisData.dataFilePath = filePath;
     
-    // Calculate possession frames from percentages if not directly available
-    // Assuming 30 fps, but this is an approximation
-    double totalControlledFrames = videoAnalysisData.totalFrames;
-    if (metadata.contains("team_1_frames")) {
-        videoAnalysisData.team1PossessionFrames = metadata["team_1_frames"].toInt();
-    }
-    if (metadata.contains("team_2_frames")) {
-        videoAnalysisData.team2PossessionFrames = metadata["team_2_frames"].toInt();
-    }
+    // Extract possession frames (may not be present in older exports)
+    videoAnalysisData.team1PossessionFrames = metadata.value("team_1_frames").toInt(0);
+    videoAnalysisData.team2PossessionFrames = metadata.value("team_2_frames").toInt(0);
     
     hasVideoAnalysisData = true;
     return true;

@@ -18,6 +18,49 @@ class DataExporter:
     def __init__(self):
         pass
     
+    def _calculate_attack_time(self, tracks, team_ball_control):
+        """
+        Calculate attack time for both teams.
+        Attack time is when a team has possession past the half field line.
+        
+        Args:
+            tracks: Dictionary containing player, ball, and referee tracking data
+            team_ball_control: Array of team ball control per frame
+            
+        Returns:
+            tuple: (team_1_attack_frames, team_2_attack_frames)
+        """
+        # Half field is at 11.66 meters (half of 23.32m court length)
+        half_field = 11.66
+        team_1_attack_frames = 0
+        team_2_attack_frames = 0
+        
+        for frame_num in range(len(tracks["players"])):
+            if frame_num >= len(team_ball_control):
+                break
+            
+            # Get ball position for this frame
+            ball_frame = tracks["ball"][frame_num]
+            if ball_frame:
+                # Since there's typically only one ball, get it directly or use first available
+                ball_info = ball_frame.get(1) or next(iter(ball_frame.values()), None)
+                if ball_info:
+                    ball_pos_transformed = ball_info.get("position_transformed")
+                    if ball_pos_transformed is not None and len(ball_pos_transformed) >= 1:
+                        ball_x = ball_pos_transformed[0]
+                        
+                        # Team 1 attacks from left (x=0) to right
+                        # Team 2 attacks from right (x=23.32) to left
+                        # Team 1 is in attack when ball x > 11.66
+                        # Team 2 is in attack when ball x < 11.66
+                        
+                        if team_ball_control[frame_num] == 1 and ball_x > half_field:
+                            team_1_attack_frames += 1
+                        elif team_ball_control[frame_num] == 2 and ball_x < half_field:
+                            team_2_attack_frames += 1
+        
+        return team_1_attack_frames, team_2_attack_frames
+    
     def export_to_json(self, tracks, team_ball_control, camera_movement_per_frame, output_path):
         """
         Export all analysis data to a comprehensive JSON file.
@@ -54,33 +97,8 @@ class DataExporter:
             data["metadata"]["team_1_frames"] = 0
             data["metadata"]["team_2_frames"] = 0
         
-        # Calculate attack time (possession past half field)
-        # Half field is at 11.66 meters (half of 23.32m court length)
-        half_field = 11.66
-        team_1_attack_frames = 0
-        team_2_attack_frames = 0
-        
-        for frame_num in range(len(tracks["players"])):
-            if frame_num >= len(team_ball_control):
-                break
-            
-            # Get ball position for this frame
-            ball_frame = tracks["ball"][frame_num]
-            if ball_frame:
-                for ball_id, ball_info in ball_frame.items():
-                    ball_pos_transformed = ball_info.get("position_transformed")
-                    if ball_pos_transformed is not None and len(ball_pos_transformed) >= 1:
-                        ball_x = ball_pos_transformed[0]
-                        
-                        # Team 1 attacks from left (x=0) to right
-                        # Team 2 attacks from right (x=23.32) to left
-                        # Team 1 is in attack when ball x > 11.66
-                        # Team 2 is in attack when ball x < 11.66
-                        
-                        if team_ball_control[frame_num] == 1 and ball_x > half_field:
-                            team_1_attack_frames += 1
-                        elif team_ball_control[frame_num] == 2 and ball_x < half_field:
-                            team_2_attack_frames += 1
+        # Calculate attack time using helper method
+        team_1_attack_frames, team_2_attack_frames = self._calculate_attack_time(tracks, team_ball_control)
         
         if total_controlled > 0:
             data["metadata"]["team_1_attack_percent"] = float(team_1_attack_frames / total_controlled * 100)
@@ -231,27 +249,8 @@ class DataExporter:
         team_2_frames = np.sum(team_ball_control == 2)
         total_controlled = team_1_frames + team_2_frames
         
-        # Calculate attack time (possession past half field)
-        half_field = 11.66
-        team_1_attack_frames = 0
-        team_2_attack_frames = 0
-        
-        for frame_num in range(len(tracks["players"])):
-            if frame_num >= len(team_ball_control):
-                break
-            
-            # Get ball position for this frame
-            ball_frame = tracks["ball"][frame_num]
-            if ball_frame:
-                for ball_id, ball_info in ball_frame.items():
-                    ball_pos_transformed = ball_info.get("position_transformed")
-                    if ball_pos_transformed is not None and len(ball_pos_transformed) >= 1:
-                        ball_x = ball_pos_transformed[0]
-                        
-                        if team_ball_control[frame_num] == 1 and ball_x > half_field:
-                            team_1_attack_frames += 1
-                        elif team_ball_control[frame_num] == 2 and ball_x < half_field:
-                            team_2_attack_frames += 1
+        # Calculate attack time using helper method
+        team_1_attack_frames, team_2_attack_frames = self._calculate_attack_time(tracks, team_ball_control)
         
         with open(stats_csv_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
