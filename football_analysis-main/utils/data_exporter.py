@@ -46,9 +46,13 @@ class DataExporter:
         if total_controlled > 0:
             data["metadata"]["team_1_ball_control_percent"] = float(team_1_frames / total_controlled * 100)
             data["metadata"]["team_2_ball_control_percent"] = float(team_2_frames / total_controlled * 100)
+            data["metadata"]["team_1_frames"] = int(team_1_frames)
+            data["metadata"]["team_2_frames"] = int(team_2_frames)
         else:
             data["metadata"]["team_1_ball_control_percent"] = 0.0
             data["metadata"]["team_2_ball_control_percent"] = 0.0
+            data["metadata"]["team_1_frames"] = 0
+            data["metadata"]["team_2_frames"] = 0
         
         # Calculate attack time (possession past half field)
         # Half field is at 11.66 meters (half of 23.32m court length)
