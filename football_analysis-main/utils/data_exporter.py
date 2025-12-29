@@ -50,6 +50,45 @@ class DataExporter:
             data["metadata"]["team_1_ball_control_percent"] = 0.0
             data["metadata"]["team_2_ball_control_percent"] = 0.0
         
+        # Calculate attack time (possession past half field)
+        # Half field is at 11.66 meters (half of 23.32m court length)
+        half_field = 11.66
+        team_1_attack_frames = 0
+        team_2_attack_frames = 0
+        
+        for frame_num in range(len(tracks["players"])):
+            if frame_num >= len(team_ball_control):
+                break
+            
+            # Get ball position for this frame
+            ball_frame = tracks["ball"][frame_num]
+            if ball_frame:
+                for ball_id, ball_info in ball_frame.items():
+                    ball_pos_transformed = ball_info.get("position_transformed")
+                    if ball_pos_transformed is not None and len(ball_pos_transformed) >= 1:
+                        ball_x = ball_pos_transformed[0]
+                        
+                        # Team 1 attacks from left (x=0) to right
+                        # Team 2 attacks from right (x=23.32) to left
+                        # Team 1 is in attack when ball x > 11.66
+                        # Team 2 is in attack when ball x < 11.66
+                        
+                        if team_ball_control[frame_num] == 1 and ball_x > half_field:
+                            team_1_attack_frames += 1
+                        elif team_ball_control[frame_num] == 2 and ball_x < half_field:
+                            team_2_attack_frames += 1
+        
+        if total_controlled > 0:
+            data["metadata"]["team_1_attack_percent"] = float(team_1_attack_frames / total_controlled * 100)
+            data["metadata"]["team_2_attack_percent"] = float(team_2_attack_frames / total_controlled * 100)
+            data["metadata"]["team_1_attack_frames"] = int(team_1_attack_frames)
+            data["metadata"]["team_2_attack_frames"] = int(team_2_attack_frames)
+        else:
+            data["metadata"]["team_1_attack_percent"] = 0.0
+            data["metadata"]["team_2_attack_percent"] = 0.0
+            data["metadata"]["team_1_attack_frames"] = 0
+            data["metadata"]["team_2_attack_frames"] = 0
+        
         # Process each frame
         for frame_num in range(len(tracks["players"])):
             frame_data = {
@@ -182,11 +221,33 @@ class DataExporter:
         
         print(f"Frame summary data exported to: {frames_csv_path}")
         
-        # Export ball control statistics
+        # Export ball control and attack statistics
         stats_csv_path = output_dir / "ball_control_stats.csv"
         team_1_frames = np.sum(team_ball_control == 1)
         team_2_frames = np.sum(team_ball_control == 2)
         total_controlled = team_1_frames + team_2_frames
+        
+        # Calculate attack time (possession past half field)
+        half_field = 11.66
+        team_1_attack_frames = 0
+        team_2_attack_frames = 0
+        
+        for frame_num in range(len(tracks["players"])):
+            if frame_num >= len(team_ball_control):
+                break
+            
+            # Get ball position for this frame
+            ball_frame = tracks["ball"][frame_num]
+            if ball_frame:
+                for ball_id, ball_info in ball_frame.items():
+                    ball_pos_transformed = ball_info.get("position_transformed")
+                    if ball_pos_transformed is not None and len(ball_pos_transformed) >= 1:
+                        ball_x = ball_pos_transformed[0]
+                        
+                        if team_ball_control[frame_num] == 1 and ball_x > half_field:
+                            team_1_attack_frames += 1
+                        elif team_ball_control[frame_num] == 2 and ball_x < half_field:
+                            team_2_attack_frames += 1
         
         with open(stats_csv_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
@@ -197,11 +258,19 @@ class DataExporter:
             if total_controlled > 0:
                 writer.writerow(["team_1_control_percent", team_1_frames / total_controlled * 100])
                 writer.writerow(["team_2_control_percent", team_2_frames / total_controlled * 100])
+                writer.writerow(["team_1_attack_frames", team_1_attack_frames])
+                writer.writerow(["team_2_attack_frames", team_2_attack_frames])
+                writer.writerow(["team_1_attack_percent", team_1_attack_frames / total_controlled * 100])
+                writer.writerow(["team_2_attack_percent", team_2_attack_frames / total_controlled * 100])
             else:
                 writer.writerow(["team_1_control_percent", 0])
                 writer.writerow(["team_2_control_percent", 0])
+                writer.writerow(["team_1_attack_frames", 0])
+                writer.writerow(["team_2_attack_frames", 0])
+                writer.writerow(["team_1_attack_percent", 0])
+                writer.writerow(["team_2_attack_percent", 0])
         
-        print(f"Ball control statistics exported to: {stats_csv_path}")
+        print(f"Ball control and attack statistics exported to: {stats_csv_path}")
         
         return str(output_dir)
     
