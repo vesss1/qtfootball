@@ -167,7 +167,7 @@ class DataExporter:
                 camera_x, camera_y = camera_movement_per_frame[frame_num]
                 team_control = team_ball_control[frame_num] if frame_num < len(team_ball_control) else 0
                 
-                # Get ball data if available
+                # Get ball data if available (ball ID is always 1 per tracker convention)
                 ball_data = tracks["ball"][frame_num].get(1, {})
                 ball_bbox = ball_data.get("bbox", [0, 0, 0, 0])
                 ball_position = ball_data.get("position", [0, 0])
