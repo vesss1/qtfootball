@@ -1,0 +1,2 @@
+# This file ensures the output_data directory is tracked in git
+# The directory is needed for saving analysis data output
