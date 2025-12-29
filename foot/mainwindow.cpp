@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QMessageBox>
+#include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -9,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     , currentSuccessfulGoals(0)
     , currentDistance(8)
     , practiceInProgress(false)
+    , hasVideoAnalysisData(false)
 {
     ui->setupUi(this);
     
@@ -21,6 +26,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButtonRecordMiss, &QPushButton::clicked, this, &MainWindow::onRecordMissClicked);
     connect(ui->pushButtonEndPractice, &QPushButton::clicked, this, &MainWindow::onEndPracticeClicked);
     connect(ui->pushButtonShowStats, &QPushButton::clicked, this, &MainWindow::onShowStatsClicked);
+    
+    // Connect video analysis button
+    connect(ui->pushButtonLoadVideoAnalysis, &QPushButton::clicked, this, &MainWindow::onLoadVideoAnalysisClicked);
     
     // Set table properties
     ui->tableWidgetPlayers->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -254,4 +262,105 @@ double MainWindow::calculateSuccessRate(int successful, int total) const
 double MainWindow::convertToSeconds(qint64 milliseconds) const
 {
     return milliseconds / 1000.0;
+}
+
+void MainWindow::onLoadVideoAnalysisClicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("選擇視頻分析數據文件"), 
+        QString(),
+        tr("JSON Files (*.json);;All Files (*)"));
+    
+    if (fileName.isEmpty()) {
+        return;
+    }
+    
+    if (loadVideoAnalysisData(fileName)) {
+        displayVideoAnalysisData();
+        QMessageBox::information(this, "成功", "視頻分析數據已載入！");
+    } else {
+        QMessageBox::warning(this, "錯誤", "無法載入視頻分析數據文件！");
+    }
+}
+
+bool MainWindow::loadVideoAnalysisData(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+    
+    QByteArray jsonData = file.readAll();
+    file.close();
+    
+    QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+    if (doc.isNull() || !doc.isObject()) {
+        return false;
+    }
+    
+    QJsonObject root = doc.object();
+    if (!root.contains("metadata")) {
+        return false;
+    }
+    
+    QJsonObject metadata = root["metadata"].toObject();
+    
+    // Validate that all required fields exist
+    QStringList requiredFields = {
+        "total_frames", "team_1_ball_control_percent", "team_2_ball_control_percent",
+        "team_1_attack_percent", "team_2_attack_percent"
+    };
+    
+    for (const QString &field : requiredFields) {
+        if (!metadata.contains(field)) {
+            return false;
+        }
+    }
+    
+    // Extract data with default values as fallback
+    videoAnalysisData.totalFrames = metadata.value("total_frames").toInt(0);
+    videoAnalysisData.team1PossessionPercent = metadata.value("team_1_ball_control_percent").toDouble(0.0);
+    videoAnalysisData.team2PossessionPercent = metadata.value("team_2_ball_control_percent").toDouble(0.0);
+    videoAnalysisData.team1AttackPercent = metadata.value("team_1_attack_percent").toDouble(0.0);
+    videoAnalysisData.team2AttackPercent = metadata.value("team_2_attack_percent").toDouble(0.0);
+    videoAnalysisData.team1AttackFrames = metadata.value("team_1_attack_frames").toInt(0);
+    videoAnalysisData.team2AttackFrames = metadata.value("team_2_attack_frames").toInt(0);
+    videoAnalysisData.dataFilePath = filePath;
+    
+    // Extract possession frames (may not be present in older exports)
+    videoAnalysisData.team1PossessionFrames = metadata.value("team_1_frames").toInt(0);
+    videoAnalysisData.team2PossessionFrames = metadata.value("team_2_frames").toInt(0);
+    
+    hasVideoAnalysisData = true;
+    return true;
+}
+
+void MainWindow::displayVideoAnalysisData()
+{
+    if (!hasVideoAnalysisData) {
+        return;
+    }
+    
+    // Update labels with possession data
+    ui->labelTeam1Possession->setText(QString("隊伍 1 持球時間: %1%")
+        .arg(videoAnalysisData.team1PossessionPercent, 0, 'f', 2));
+    ui->labelTeam2Possession->setText(QString("隊伍 2 持球時間: %1%")
+        .arg(videoAnalysisData.team2PossessionPercent, 0, 'f', 2));
+    
+    // Update labels with attack data
+    ui->labelTeam1Attack->setText(QString("隊伍 1 進攻時間: %1%")
+        .arg(videoAnalysisData.team1AttackPercent, 0, 'f', 2));
+    ui->labelTeam2Attack->setText(QString("隊伍 2 進攻時間: %1%")
+        .arg(videoAnalysisData.team2AttackPercent, 0, 'f', 2));
+    
+    // Update summary info
+    QString summaryText = QString("總幀數: %1\n隊伍 1 持球幀數: %2\n隊伍 2 持球幀數: %3\n"
+                                  "隊伍 1 進攻幀數: %4\n隊伍 2 進攻幀數: %5")
+        .arg(videoAnalysisData.totalFrames)
+        .arg(videoAnalysisData.team1PossessionFrames)
+        .arg(videoAnalysisData.team2PossessionFrames)
+        .arg(videoAnalysisData.team1AttackFrames)
+        .arg(videoAnalysisData.team2AttackFrames);
+    
+    ui->labelVideoAnalysisSummary->setText(summaryText);
 }

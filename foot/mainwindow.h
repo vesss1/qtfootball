@@ -27,6 +27,19 @@ struct Player {
     QVector<PracticeSession> practiceSessions;  // Practice history
 };
 
+struct VideoAnalysisData {
+    int totalFrames;
+    double team1PossessionPercent;
+    double team2PossessionPercent;
+    int team1PossessionFrames;
+    int team2PossessionFrames;
+    double team1AttackPercent;
+    double team2AttackPercent;
+    int team1AttackFrames;
+    int team2AttackFrames;
+    QString dataFilePath;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -42,6 +55,7 @@ private slots:
     void onRecordMissClicked();
     void onEndPracticeClicked();
     void onShowStatsClicked();
+    void onLoadVideoAnalysisClicked();
 
 private:
     void updatePracticeDisplay();
@@ -49,6 +63,8 @@ private:
     void checkAndAutoEndPractice();
     double calculateSuccessRate(int successful, int total) const;
     double convertToSeconds(qint64 milliseconds) const;
+    bool loadVideoAnalysisData(const QString &filePath);
+    void displayVideoAnalysisData();
     
     Ui::MainWindow *ui;
     QVector<Player> players;
@@ -58,5 +74,7 @@ private:
     int currentDistance;
     bool practiceInProgress;
     QString currentPlayerName;
+    VideoAnalysisData videoAnalysisData;
+    bool hasVideoAnalysisData;
 };
 #endif // MAINWINDOW_H
