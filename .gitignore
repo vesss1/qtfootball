@@ -57,3 +57,8 @@ compile_commands.json
 # Build artifacts and executables
 foot/foot
 _codeql_detected_source_root
+
+# Football analysis output data
+football_analysis-main/output_data/
+football_analysis-main/output_videos/
+football_analysis-main/stubs/
