@@ -1,4 +1,4 @@
-from utils import read_video, save_video
+from utils import read_video, save_video, DataExporter
 from trackers import Tracker
 import cv2
 import numpy as np
@@ -82,6 +82,21 @@ def main():
 
     # Save video
     save_video(output_video_frames, 'output_videos/output_video.avi')
+
+    # Export analysis data to JSON and CSV
+    data_exporter = DataExporter()
+    export_results = data_exporter.export_all(
+        tracks=tracks,
+        team_ball_control=team_ball_control,
+        camera_movement_per_frame=camera_movement_per_frame,
+        json_path='output_data/analysis_data.json',
+        csv_dir='output_data/csv'
+    )
+    
+    print("\n=== Data Export Complete ===")
+    print(f"JSON file: {export_results['json']}")
+    print(f"CSV files: {export_results['csv']}")
+    print("All analysis data has been extracted and saved successfully!")
 
 if __name__ == '__main__':
     main()

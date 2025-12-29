@@ -5,6 +5,26 @@ The goal of this project is to detect and track players, referees, and footballs
 
 ![Screenshot](output_videos/screenshot.png)
 
+## Features
+- **Object Detection & Tracking**: Detect and track players, referees, and ball using YOLO
+- **Team Assignment**: Automatic team identification using K-means clustering
+- **Ball Possession Analysis**: Track which team has the ball
+- **Camera Movement Compensation**: Account for camera panning and movement
+- **Speed & Distance Metrics**: Calculate player speed (km/h) and distance (m)
+- **🆕 Data Export**: Extract all analysis data to JSON/CSV formats for further analysis
+
+## Data Export Feature
+All information displayed on the output video can now be **extracted and saved** as structured data:
+- Player tracking data (position, speed, distance, team)
+- Ball tracking and possession
+- Team ball control statistics
+- Camera movement data
+- Frame-by-frame analysis
+
+**Export formats**: JSON (complete data) and CSV (tabular data)
+
+📖 See [DATA_EXPORT_README.md](DATA_EXPORT_README.md) for detailed documentation.
+
 ## Modules Used
 The following modules are used in this project:
 - YOLO: AI object detection model
