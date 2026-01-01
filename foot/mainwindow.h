@@ -37,6 +37,14 @@ struct VideoAnalysisData {
     double team2AttackPercent;
     int team1AttackFrames;
     int team2AttackFrames;
+    double team1TotalDistanceKm;
+    double team2TotalDistanceKm;
+    double team1AvgDistancePerPlayerM;
+    double team2AvgDistancePerPlayerM;
+    double team1AvgSpeedKmh;
+    double team2AvgSpeedKmh;
+    int team1PlayerCount;
+    int team2PlayerCount;
     QString dataFilePath;
 };
 

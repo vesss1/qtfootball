@@ -325,6 +325,14 @@ bool MainWindow::loadVideoAnalysisData(const QString &filePath)
     videoAnalysisData.team2AttackPercent = metadata.value("team_2_attack_percent").toDouble(0.0);
     videoAnalysisData.team1AttackFrames = metadata.value("team_1_attack_frames").toInt(0);
     videoAnalysisData.team2AttackFrames = metadata.value("team_2_attack_frames").toInt(0);
+    videoAnalysisData.team1TotalDistanceKm = metadata.value("team_1_total_distance_km").toDouble(0.0);
+    videoAnalysisData.team2TotalDistanceKm = metadata.value("team_2_total_distance_km").toDouble(0.0);
+    videoAnalysisData.team1AvgDistancePerPlayerM = metadata.value("team_1_avg_distance_per_player_m").toDouble(0.0);
+    videoAnalysisData.team2AvgDistancePerPlayerM = metadata.value("team_2_avg_distance_per_player_m").toDouble(0.0);
+    videoAnalysisData.team1AvgSpeedKmh = metadata.value("team_1_avg_speed_kmh").toDouble(0.0);
+    videoAnalysisData.team2AvgSpeedKmh = metadata.value("team_2_avg_speed_kmh").toDouble(0.0);
+    videoAnalysisData.team1PlayerCount = metadata.value("team_1_player_count").toInt(0);
+    videoAnalysisData.team2PlayerCount = metadata.value("team_2_player_count").toInt(0);
     videoAnalysisData.dataFilePath = filePath;
     
     // Extract possession frames (may not be present in older exports)
@@ -353,14 +361,33 @@ void MainWindow::displayVideoAnalysisData()
     ui->labelTeam2Attack->setText(QString("隊伍 2 進攻時間: %1%")
         .arg(videoAnalysisData.team2AttackPercent, 0, 'f', 2));
     
+    // Update labels with distance data
+    ui->labelTeam1Distance->setText(QString("隊伍 1 總距離: %1 公里")
+        .arg(videoAnalysisData.team1TotalDistanceKm, 0, 'f', 2));
+    ui->labelTeam2Distance->setText(QString("隊伍 2 總距離: %1 公里")
+        .arg(videoAnalysisData.team2TotalDistanceKm, 0, 'f', 2));
+    
+    // Update labels with speed data
+    ui->labelTeam1Speed->setText(QString("隊伍 1 平均速度: %1 公里/小時")
+        .arg(videoAnalysisData.team1AvgSpeedKmh, 0, 'f', 2));
+    ui->labelTeam2Speed->setText(QString("隊伍 2 平均速度: %1 公里/小時")
+        .arg(videoAnalysisData.team2AvgSpeedKmh, 0, 'f', 2));
+    
     // Update summary info
-    QString summaryText = QString("總幀數: %1\n隊伍 1 持球幀數: %2\n隊伍 2 持球幀數: %3\n"
-                                  "隊伍 1 進攻幀數: %4\n隊伍 2 進攻幀數: %5")
+    QString summaryText = QString("總幀數: %1\n"
+                                  "隊伍 1 持球幀數: %2 | 進攻幀數: %3\n"
+                                  "隊伍 2 持球幀數: %4 | 進攻幀數: %5\n"
+                                  "隊伍 1 球員數: %6 | 平均每人距離: %7 公尺\n"
+                                  "隊伍 2 球員數: %8 | 平均每人距離: %9 公尺")
         .arg(videoAnalysisData.totalFrames)
         .arg(videoAnalysisData.team1PossessionFrames)
-        .arg(videoAnalysisData.team2PossessionFrames)
         .arg(videoAnalysisData.team1AttackFrames)
-        .arg(videoAnalysisData.team2AttackFrames);
+        .arg(videoAnalysisData.team2PossessionFrames)
+        .arg(videoAnalysisData.team2AttackFrames)
+        .arg(videoAnalysisData.team1PlayerCount)
+        .arg(videoAnalysisData.team1AvgDistancePerPlayerM, 0, 'f', 1)
+        .arg(videoAnalysisData.team2PlayerCount)
+        .arg(videoAnalysisData.team2AvgDistancePerPlayerM, 0, 'f', 1);
     
     ui->labelVideoAnalysisSummary->setText(summaryText);
 }

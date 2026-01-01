@@ -34,7 +34,13 @@ def test_qt_data_loading():
         'team1AttackPercent': metadata.get('team_1_attack_percent', 0.0),
         'team2AttackPercent': metadata.get('team_2_attack_percent', 0.0),
         'team1AttackFrames': metadata.get('team_1_attack_frames', 0),
-        'team2AttackFrames': metadata.get('team_2_attack_frames', 0)
+        'team2AttackFrames': metadata.get('team_2_attack_frames', 0),
+        'team1TotalDistanceKm': metadata.get('team_1_total_distance_km', 0.0),
+        'team2TotalDistanceKm': metadata.get('team_2_total_distance_km', 0.0),
+        'team1AvgSpeedKmh': metadata.get('team_1_avg_speed_kmh', 0.0),
+        'team2AvgSpeedKmh': metadata.get('team_2_avg_speed_kmh', 0.0),
+        'team1PlayerCount': metadata.get('team_1_player_count', 0),
+        'team2PlayerCount': metadata.get('team_2_player_count', 0)
     }
     
     print("Loaded data:")
@@ -45,6 +51,12 @@ def test_qt_data_loading():
     print(f"\nAttack Statistics:")
     print(f"  Team 1: {video_data['team1AttackPercent']:.2f}% ({video_data['team1AttackFrames']} frames)")
     print(f"  Team 2: {video_data['team2AttackPercent']:.2f}% ({video_data['team2AttackFrames']} frames)")
+    print(f"\nDistance Statistics:")
+    print(f"  Team 1 Total: {video_data['team1TotalDistanceKm']:.2f} km ({video_data['team1PlayerCount']} players)")
+    print(f"  Team 2 Total: {video_data['team2TotalDistanceKm']:.2f} km ({video_data['team2PlayerCount']} players)")
+    print(f"\nSpeed Statistics:")
+    print(f"  Team 1 Avg: {video_data['team1AvgSpeedKmh']:.2f} km/h")
+    print(f"  Team 2 Avg: {video_data['team2AvgSpeedKmh']:.2f} km/h")
     
     # Simulate the Qt UI display strings
     print("\n" + "="*60)
@@ -55,11 +67,19 @@ def test_qt_data_loading():
     label2 = f"隊伍 2 持球時間: {video_data['team2PossessionPercent']:.2f}%"
     label3 = f"隊伍 1 進攻時間: {video_data['team1AttackPercent']:.2f}%"
     label4 = f"隊伍 2 進攻時間: {video_data['team2AttackPercent']:.2f}%"
+    label5 = f"隊伍 1 總距離: {video_data['team1TotalDistanceKm']:.2f} 公里"
+    label6 = f"隊伍 2 總距離: {video_data['team2TotalDistanceKm']:.2f} 公里"
+    label7 = f"隊伍 1 平均速度: {video_data['team1AvgSpeedKmh']:.2f} 公里/小時"
+    label8 = f"隊伍 2 平均速度: {video_data['team2AvgSpeedKmh']:.2f} 公里/小時"
     
     print(f"\n{label1}")
     print(f"{label2}")
     print(f"{label3}")
     print(f"{label4}")
+    print(f"{label5}")
+    print(f"{label6}")
+    print(f"{label7}")
+    print(f"{label8}")
     
     summary = (f"總幀數: {video_data['totalFrames']}\n"
                f"隊伍 1 持球幀數: {video_data['team1PossessionFrames']}\n"
