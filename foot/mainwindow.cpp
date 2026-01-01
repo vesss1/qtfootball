@@ -374,20 +374,21 @@ void MainWindow::displayVideoAnalysisData()
         .arg(videoAnalysisData.team2AvgSpeedKmh, 0, 'f', 2));
     
     // Update summary info
-    QString summaryText = QString("總幀數: %1\n"
-                                  "隊伍 1 持球幀數: %2 | 進攻幀數: %3\n"
-                                  "隊伍 2 持球幀數: %4 | 進攻幀數: %5\n"
-                                  "隊伍 1 球員數: %6 | 平均每人距離: %7 公尺\n"
-                                  "隊伍 2 球員數: %8 | 平均每人距離: %9 公尺")
-        .arg(videoAnalysisData.totalFrames)
-        .arg(videoAnalysisData.team1PossessionFrames)
-        .arg(videoAnalysisData.team1AttackFrames)
-        .arg(videoAnalysisData.team2PossessionFrames)
-        .arg(videoAnalysisData.team2AttackFrames)
-        .arg(videoAnalysisData.team1PlayerCount)
-        .arg(videoAnalysisData.team1AvgDistancePerPlayerM, 0, 'f', 1)
-        .arg(videoAnalysisData.team2PlayerCount)
-        .arg(videoAnalysisData.team2AvgDistancePerPlayerM, 0, 'f', 1);
+    QStringList summaryParts;
+    summaryParts << QString("總幀數: %1").arg(videoAnalysisData.totalFrames);
+    summaryParts << QString("隊伍 1 持球幀數: %1 | 進攻幀數: %2")
+                    .arg(videoAnalysisData.team1PossessionFrames)
+                    .arg(videoAnalysisData.team1AttackFrames);
+    summaryParts << QString("隊伍 2 持球幀數: %1 | 進攻幀數: %2")
+                    .arg(videoAnalysisData.team2PossessionFrames)
+                    .arg(videoAnalysisData.team2AttackFrames);
+    summaryParts << QString("隊伍 1 球員數: %1 | 平均每人距離: %2 公尺")
+                    .arg(videoAnalysisData.team1PlayerCount)
+                    .arg(videoAnalysisData.team1AvgDistancePerPlayerM, 0, 'f', 1);
+    summaryParts << QString("隊伍 2 球員數: %1 | 平均每人距離: %2 公尺")
+                    .arg(videoAnalysisData.team2PlayerCount)
+                    .arg(videoAnalysisData.team2AvgDistancePerPlayerM, 0, 'f', 1);
     
+    QString summaryText = summaryParts.join("\n");
     ui->labelVideoAnalysisSummary->setText(summaryText);
 }

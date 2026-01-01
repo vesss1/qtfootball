@@ -9,6 +9,9 @@ import os
 import numpy as np
 from typing import Dict, List, Any
 
+# Field dimensions constant
+HALF_FIELD_LENGTH = 11.66  # meters - half of the football field length
+
 
 class DataExporter:
     """
@@ -64,8 +67,8 @@ class DataExporter:
         Calculate attack time statistics for both teams
         
         Attack is defined as:
-        - Team 1: Has possession AND ball is past half field (x > 11.66m)
-        - Team 2: Has possession AND ball is past half field (x < 11.66m)
+        - Team 1: Has possession AND ball is past half field (x > HALF_FIELD_LENGTH)
+        - Team 2: Has possession AND ball is past half field (x < HALF_FIELD_LENGTH)
         
         Args:
             tracks: Tracking data including ball positions
@@ -74,7 +77,6 @@ class DataExporter:
         Returns:
             Dictionary with attack statistics
         """
-        half_field = 11.66  # meters
         team_1_attack_frames = 0
         team_2_attack_frames = 0
         total_frames = len(team_ball_control)
@@ -96,10 +98,10 @@ class DataExporter:
             team_control = team_ball_control[frame_num]
             
             # Team 1 attacks left to right (x increases)
-            if team_control == 1 and ball_x > half_field:
+            if team_control == 1 and ball_x > HALF_FIELD_LENGTH:
                 team_1_attack_frames += 1
             # Team 2 attacks right to left (x decreases)
-            elif team_control == 2 and ball_x < half_field:
+            elif team_control == 2 and ball_x < HALF_FIELD_LENGTH:
                 team_2_attack_frames += 1
         
         team_1_attack_percent = (team_1_attack_frames / total_frames * 100) if total_frames > 0 else 0.0
@@ -115,6 +117,9 @@ class DataExporter:
     def calculate_distance_and_speed_stats(self, tracks: Dict) -> Dict[str, Any]:
         """
         Calculate distance and speed statistics for all players
+        
+        Note: Assumes the last frame contains cumulative statistics for each player.
+        Distance is measured in meters, speed in km/h.
         
         Args:
             tracks: Tracking data including player positions, distances, and speeds
@@ -137,20 +142,21 @@ class DataExporter:
                 if team is None:
                     continue
                 
-                # Get distance (in meters)
-                distance = player_data.get('distance', 0)
-                # Get speed (in km/h)
-                speed = player_data.get('speed', 0)
+                # Get distance (in meters) - only include if present
+                distance = player_data.get('distance', None)
+                # Get speed (in km/h) - only include if present
+                speed = player_data.get('speed', None)
                 
                 if team == 1:
-                    if distance > 0:
+                    # Include all distance values, even zero (player may not have moved much)
+                    if distance is not None:
                         team_1_distances.append(distance)
-                    if speed > 0:
+                    if speed is not None:
                         team_1_speeds.append(speed)
                 elif team == 2:
-                    if distance > 0:
+                    if distance is not None:
                         team_2_distances.append(distance)
-                    if speed > 0:
+                    if speed is not None:
                         team_2_speeds.append(speed)
         
         # Calculate averages and totals
