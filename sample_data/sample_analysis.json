@@ -9,7 +9,15 @@
     "team_1_attack_percent": 32.5,
     "team_2_attack_percent": 28.1,
     "team_1_attack_frames": 812,
-    "team_2_attack_frames": 702
+    "team_2_attack_frames": 702,
+    "team_1_total_distance_km": 12.45,
+    "team_2_total_distance_km": 11.87,
+    "team_1_avg_distance_per_player_m": 1245.3,
+    "team_2_avg_distance_per_player_m": 1187.2,
+    "team_1_avg_speed_kmh": 8.5,
+    "team_2_avg_speed_kmh": 8.2,
+    "team_1_player_count": 10,
+    "team_2_player_count": 10
   },
   "frames": []
 }
